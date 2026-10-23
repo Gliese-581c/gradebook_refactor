@@ -16,7 +16,7 @@
  */
 public class Gradebook {
 
-    private void gradePrint(double grade, String name, int id) {
+    private String letterGrade(double grade) {
         String letter;
         if (grade >= 90) {
             letter = "A";
@@ -29,7 +29,7 @@ public class Gradebook {
         } else {
             letter = "F";
         }
-        System.out.printf("%-14s %5d %7.2f  %s%n", name, id, grade, letter);
+        return letter;
     }
 
     public static void main(String[] args) {
@@ -117,7 +117,7 @@ public class Gradebook {
                     weighted += catWeights[c] * (earned / possible);
                 }
                 double grade = weighted * 100;
-                gradePrint(grade, names[s], ids[s]);
+                System.out.printf("%-14s %5d %7.2f  %s%n", names[s], ids[s], grade, letterGrade(grade));
             }
 
         } else if (command.equals("top")) {
@@ -193,19 +193,8 @@ public class Gradebook {
 
             System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
             for (int i = 0; i < n && i < names.length; i++) {
-                String letter;
-                if (grades[i] >= 90) {
-                    letter = "A";
-                } else if (grades[i] >= 80) {
-                    letter = "B";
-                } else if (grades[i] >= 70) {
-                    letter = "C";
-                } else if (grades[i] >= 60) {
-                    letter = "D";
-                } else {
-                    letter = "F";
-                }
-                System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, names[i], ids[i], grades[i], letter);
+                System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, names[i], ids[i], grades[i],
+                        letterGrade(grades[i]));
             }
 
         } else if (command.equals("student")) {
@@ -269,20 +258,8 @@ public class Gradebook {
                 weighted += catWeights[c] * (earned / possible);
             }
             double grade = weighted * 100;
-            String letter;
-            if (grade >= 90) {
-                letter = "A";
-            } else if (grade >= 80) {
-                letter = "B";
-            } else if (grade >= 70) {
-                letter = "C";
-            } else if (grade >= 60) {
-                letter = "D";
-            } else {
-                letter = "F";
-            }
             System.out.println();
-            System.out.printf("Final grade: %.2f (%s)%n", grade, letter);
+            System.out.printf("Final grade: %.2f (%s)%n", grade, letterGrade(grade));
 
         } else if (command.equals("assignments")) {
             if (args.length != 1) {

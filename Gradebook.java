@@ -16,6 +16,68 @@
  */
 public class Gradebook {
 
+    private void student(String args, int[] ids, String[] names, String[] catNames, boolean[] catDropLowest,
+            String[] assignNames, int[] assignCats, double[][] scores, double[] pointsPossible, double[] catWeights) {
+        int id = 0;
+        try {
+            id = Integer.parseInt(args);
+        } catch (NumberFormatException e) {
+            System.err.println("Not a number: " + args);
+            System.exit(1);
+        }
+        int s = -1;
+        for (int i = 0; i < ids.length; i++) {
+            if (ids[i] == id) {
+                s = i;
+            }
+        }
+        if (s == -1) {
+            System.err.println("No student with ID " + id);
+            System.exit(1);
+        }
+
+        System.out.println(names[s] + " (" + ids[s] + ")");
+        double weighted = 0;
+        for (int c = 0; c < catNames.length; c++) {
+            int dropped = -1;
+            if (catDropLowest[c]) {
+                double lowest = Double.MAX_VALUE;
+                for (int a = 0; a < assignNames.length; a++) {
+                    if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
+                        lowest = scores[s][a] / pointsPossible[a];
+                        dropped = a;
+                    }
+                }
+            }
+            System.out.println();
+            if (catDropLowest[c]) {
+                System.out.printf("%s (%.0f%%, lowest score dropped)%n", catNames[c], catWeights[c] * 100);
+            } else {
+                System.out.printf("%s (%.0f%%)%n", catNames[c], catWeights[c] * 100);
+            }
+            double earned = 0;
+            double possible = 0;
+            for (int a = 0; a < assignNames.length; a++) {
+                if (assignCats[a] == c) {
+                    if (a == dropped) {
+                        System.out.printf("  %-8s %4.0f / %3.0f  (dropped)%n", assignNames[a], scores[s][a],
+                                pointsPossible[a]);
+                    } else {
+                        System.out.printf("  %-8s %4.0f / %3.0f%n", assignNames[a], scores[s][a],
+                                pointsPossible[a]);
+                        earned += scores[s][a];
+                        possible += pointsPossible[a];
+                    }
+                }
+            }
+            System.out.printf("  %-8s %10.2f%%%n", "Total", earned / possible * 100);
+            weighted += catWeights[c] * (earned / possible);
+        }
+        double grade = weighted * 100;
+        System.out.println();
+        System.out.printf("Final grade: %.2f (%s)%n", grade, letterGrade(grade));
+    }
+
     private void top(String args, int[] ids, String[] names, String[] catNames, String[] assignNames, int[] assignCats,
             double[][] scores, double[] pointsPossible, boolean[] catDropLowest, double[] catWeights) {
 
@@ -132,8 +194,12 @@ public class Gradebook {
         }
         switch (args[0]) {
             case "grades":
-                grades(names, catNames, catDropLowest, assignCats, scores, pointsPossible, catWeights, ids,
-                        assignNames);
+                if (args.length > 1) {
+                    error(usage);
+                } else {
+                    grades(names, catNames, catDropLowest, assignCats, scores, pointsPossible, catWeights, ids,
+                            assignNames);
+                }
                 break;
             case "top":
                 if (args.length != 2) {
@@ -144,7 +210,12 @@ public class Gradebook {
                 }
                 break;
             case "student":
-                // student();
+                if (args.length != 2) {
+                    error(usage);
+                } else {
+                    student(args[1], ids, names, catNames, catDropLowest, assignNames, assignCats, scores,
+                            pointsPossible, catWeights);
+                }
                 break;
             case "assignments":
                 // assignments();
@@ -231,70 +302,7 @@ public class Gradebook {
         branch(args, usage, catNames, catWeights, catDropLowest, assignNames, assignCats, pointsPossible, names, ids,
                 scores);
         String command = args[0];
-        if (command.equals("student")) {
-            if (args.length != 2) {
-                error(usage);
-            }
-            int id = 0;
-            try {
-                id = Integer.parseInt(args[1]);
-            } catch (NumberFormatException e) {
-                System.err.println("Not a number: " + args[1]);
-                System.exit(1);
-            }
-            int s = -1;
-            for (int i = 0; i < ids.length; i++) {
-                if (ids[i] == id) {
-                    s = i;
-                }
-            }
-            if (s == -1) {
-                System.err.println("No student with ID " + id);
-                System.exit(1);
-            }
-
-            System.out.println(names[s] + " (" + ids[s] + ")");
-            double weighted = 0;
-            for (int c = 0; c < catNames.length; c++) {
-                int dropped = -1;
-                if (catDropLowest[c]) {
-                    double lowest = Double.MAX_VALUE;
-                    for (int a = 0; a < assignNames.length; a++) {
-                        if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
-                            lowest = scores[s][a] / pointsPossible[a];
-                            dropped = a;
-                        }
-                    }
-                }
-                System.out.println();
-                if (catDropLowest[c]) {
-                    System.out.printf("%s (%.0f%%, lowest score dropped)%n", catNames[c], catWeights[c] * 100);
-                } else {
-                    System.out.printf("%s (%.0f%%)%n", catNames[c], catWeights[c] * 100);
-                }
-                double earned = 0;
-                double possible = 0;
-                for (int a = 0; a < assignNames.length; a++) {
-                    if (assignCats[a] == c) {
-                        if (a == dropped) {
-                            System.out.printf("  %-8s %4.0f / %3.0f  (dropped)%n", assignNames[a], scores[s][a],
-                                    pointsPossible[a]);
-                        } else {
-                            System.out.printf("  %-8s %4.0f / %3.0f%n", assignNames[a], scores[s][a],
-                                    pointsPossible[a]);
-                            earned += scores[s][a];
-                            possible += pointsPossible[a];
-                        }
-                    }
-                }
-                System.out.printf("  %-8s %10.2f%%%n", "Total", earned / possible * 100);
-                weighted += catWeights[c] * (earned / possible);
-            }
-            double grade = weighted * 100;
-            System.out.println();
-            System.out.printf("Final grade: %.2f (%s)%n", grade, letterGrade(grade));
-
-        } else if (command.equals("assignments")) {
+        if (command.equals("assignments")) {
             if (args.length != 1) {
                 error(usage);
             }

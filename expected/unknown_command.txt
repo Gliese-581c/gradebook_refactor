@@ -1,0 +1,9 @@
+Unknown command: average
+Usage: java Gradebook COMMAND [ARG]
+Commands:
+  grades          every student's weighted grade and letter grade
+  top N           the N students with the highest grades
+  student ID      a breakdown of one student's grade
+  assignments     score statistics for each assignment
+  distribution    how many students earned each letter grade
+exit status: 1

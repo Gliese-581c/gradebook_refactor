@@ -1,0 +1,11 @@
+Name     Category  Possible    Mean   Min   Max
+HW1      Homework        10    8.00     5    10
+HW2      Homework        10    7.00     0    10
+HW3      Homework        20   15.13    10    19
+HW4      Homework        10    6.88     0    10
+Lab1     Labs            20   16.75    12    20
+Lab2     Labs            25   20.13    14    24
+Lab3     Labs            30   23.88    16    29
+Midterm  Exams          100   75.50    55    94
+Final    Exams          150  113.00    80   141
+exit status: 0

@@ -1,0 +1,2 @@
+No student with ID 9999
+exit status: 1

@@ -1,0 +1,2 @@
+Not a number: ada
+exit status: 1

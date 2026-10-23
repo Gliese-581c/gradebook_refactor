@@ -1,0 +1,22 @@
+Ada Okafor (1041)
+
+Homework (30%, lowest score dropped)
+  HW1        10 /  10
+  HW2         9 /  10  (dropped)
+  HW3        19 /  20
+  HW4        10 /  10
+  Total         97.50%
+
+Labs (30%)
+  Lab1       19 /  20
+  Lab2       24 /  25
+  Lab3       29 /  30
+  Total         96.00%
+
+Exams (40%)
+  Midterm    94 / 100
+  Final     141 / 150
+  Total         94.00%
+
+Final grade: 95.65 (A)
+exit status: 0

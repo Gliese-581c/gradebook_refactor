@@ -1,0 +1,10 @@
+Rank  Name              ID   Grade  Letter
+   1  Ada Okafor      1041   95.65  A
+   2  Chloe Nguyen    1063   91.83  A
+   3  Farid Haddad    1093   85.40  B
+   4  Ben Castillo    1057   79.14  C
+   5  Hugo Martins    1118   79.10  C
+   6  Dev Raman       1072   70.41  C
+   7  Elena Petrov    1088   69.75  D
+   8  Grace Liu       1105   54.15  F
+exit status: 0

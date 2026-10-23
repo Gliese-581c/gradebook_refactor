@@ -1,0 +1,6 @@
+A  2  **
+B  1  *
+C  3  ***
+D  1  *
+F  1  *
+exit status: 0

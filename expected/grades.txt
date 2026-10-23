@@ -1,0 +1,10 @@
+Name              ID   Grade  Letter
+Ada Okafor      1041   95.65  A
+Ben Castillo    1057   79.14  C
+Chloe Nguyen    1063   91.83  A
+Dev Raman       1072   70.41  C
+Elena Petrov    1088   69.75  D
+Farid Haddad    1093   85.40  B
+Grace Liu       1105   54.15  F
+Hugo Martins    1118   79.10  C
+exit status: 0

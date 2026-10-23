@@ -1,0 +1,22 @@
+Elena Petrov (1088)
+
+Homework (30%, lowest score dropped)
+  HW1         7 /  10
+  HW2         0 /  10  (dropped)
+  HW3        14 /  20
+  HW4         8 /  10
+  Total         72.50%
+
+Labs (30%)
+  Lab1       16 /  20
+  Lab2       19 /  25
+  Lab3       21 /  30
+  Total         74.67%
+
+Exams (40%)
+  Midterm    65 / 100
+  Final      95 / 150
+  Total         64.00%
+
+Final grade: 69.75 (D)
+exit status: 0

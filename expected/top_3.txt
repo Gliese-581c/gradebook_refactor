@@ -1,0 +1,5 @@
+Rank  Name              ID   Grade  Letter
+   1  Ada Okafor      1041   95.65  A
+   2  Chloe Nguyen    1063   91.83  A
+   3  Farid Haddad    1093   85.40  B
+exit status: 0

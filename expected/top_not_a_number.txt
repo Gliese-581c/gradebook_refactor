@@ -1,0 +1,2 @@
+Not a number: abc
+exit status: 1

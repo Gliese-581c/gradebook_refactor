@@ -16,7 +16,27 @@
  */
 public class Gradebook {
 
+    private void gradePrint(double grade, String name, int id) {
+        String letter;
+        if (grade >= 90) {
+            letter = "A";
+        } else if (grade >= 80) {
+            letter = "B";
+        } else if (grade >= 70) {
+            letter = "C";
+        } else if (grade >= 60) {
+            letter = "D";
+        } else {
+            letter = "F";
+        }
+        System.out.printf("%-14s %5d %7.2f  %s%n", name, id, grade, letter);
+    }
+
     public static void main(String[] args) {
+        new Gradebook().run(args);
+    }
+
+    private void run(String[] args) {
         // The gradebook data is hard-coded into the class. This isn't
         // ideal practice in real life, but for the purposes of this
         // assignment, it's a lot simpler than loading them from a CSV
@@ -97,19 +117,7 @@ public class Gradebook {
                     weighted += catWeights[c] * (earned / possible);
                 }
                 double grade = weighted * 100;
-                String letter;
-                if (grade >= 90) {
-                    letter = "A";
-                } else if (grade >= 80) {
-                    letter = "B";
-                } else if (grade >= 70) {
-                    letter = "C";
-                } else if (grade >= 60) {
-                    letter = "D";
-                } else {
-                    letter = "F";
-                }
-                System.out.printf("%-14s %5d %7.2f  %s%n", names[s], ids[s], grade, letter);
+                gradePrint(grade, names[s], ids[s]);
             }
 
         } else if (command.equals("top")) {

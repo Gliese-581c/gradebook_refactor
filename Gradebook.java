@@ -16,6 +16,27 @@
  */
 public class Gradebook {
 
+    private void assignments(String[] assignNames, double[][] scores, String[] names, double[] pointsPossible,
+            String[] catNames, int[] assignCats) {
+        System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
+        for (int a = 0; a < assignNames.length; a++) {
+            double total = 0;
+            double min = scores[0][a];
+            double max = scores[0][a];
+            for (int s = 0; s < names.length; s++) {
+                total += scores[s][a];
+                if (scores[s][a] < min) {
+                    min = scores[s][a];
+                }
+                if (scores[s][a] > max) {
+                    max = scores[s][a];
+                }
+            }
+            System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", assignNames[a], catNames[assignCats[a]],
+                    pointsPossible[a], total / names.length, min, max);
+        }
+    }
+
     private void student(String args, int[] ids, String[] names, String[] catNames, boolean[] catDropLowest,
             String[] assignNames, int[] assignCats, double[][] scores, double[] pointsPossible, double[] catWeights) {
         int id = 0;
@@ -218,7 +239,11 @@ public class Gradebook {
                 }
                 break;
             case "assignments":
-                // assignments();
+                if (args.length != 1) {
+                    error(usage);
+                } else {
+                    assignments(assignNames, scores, names, pointsPossible, catNames, assignCats);
+                }
                 break;
             case "distribution":
                 // distribution;
@@ -305,23 +330,6 @@ public class Gradebook {
         if (command.equals("assignments")) {
             if (args.length != 1) {
                 error(usage);
-            }
-            System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
-            for (int a = 0; a < assignNames.length; a++) {
-                double total = 0;
-                double min = scores[0][a];
-                double max = scores[0][a];
-                for (int s = 0; s < names.length; s++) {
-                    total += scores[s][a];
-                    if (scores[s][a] < min) {
-                        min = scores[s][a];
-                    }
-                    if (scores[s][a] > max) {
-                        max = scores[s][a];
-                    }
-                }
-                System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", assignNames[a], catNames[assignCats[a]],
-                        pointsPossible[a], total / names.length, min, max);
             }
 
         } else if (command.equals("distribution")) {

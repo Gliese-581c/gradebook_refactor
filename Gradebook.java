@@ -17,19 +17,33 @@
  */
 import java.util.*;
 
+class assignment {
+    String name;
+    String category;
+    double weight;
+    boolean drop;
+    double points;
+}
+
 class student {
     String name;
     int id;
     double[] scores = new double[9];
+    double total = 0;
+
+    public String toString() {
+        return name + " (" + id + ") " + total;
+    }
 }
 
 public class Gradebook {
 
-    private void distribution(String[] names, String[] catNames, boolean[] catDropLowest, String[] assignNames,
+    private void distribution(ArrayList<student> roster, String[] catNames, boolean[] catDropLowest,
+            String[] assignNames,
             int[] assignCats, double[][] scores, double[] pointsPossible, double[] catWeights) {
         String[] letters = { "A", "B", "C", "D", "F" };
         int[] counts = new int[letters.length];
-        for (int s = 0; s < names.length; s++) {
+        for (int s = 0; s < roster.size(); s++) {
             double weighted = 0;
             for (int c = 0; c < catNames.length; c++) {
                 int dropped = -1;
@@ -70,24 +84,24 @@ public class Gradebook {
         }
     }
 
-    private void assignments(String[] assignNames, double[][] scores, String[] names, double[] pointsPossible,
-            String[] catNames, int[] assignCats) {
+    private void assignments(ArrayList<assignment> assignments, ArrayList<student> roster) {
         System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
-        for (int a = 0; a < assignNames.length; a++) {
+        for (int a = 0; a < assignments.size(); a++) {
             double total = 0;
-            double min = scores[0][a];
-            double max = scores[0][a];
-            for (int s = 0; s < names.length; s++) {
-                total += scores[s][a];
-                if (scores[s][a] < min) {
-                    min = scores[s][a];
+            double min = roster.get(0).scores[a];
+            double max = roster.get(0).scores[a];
+            for (int s = 0; s < roster.size(); s++) {
+                total += roster.get(s).scores[a];
+                if (roster.get(s).scores[a] < min) {
+                    min = roster.get(s).scores[a];
                 }
-                if (scores[s][a] > max) {
-                    max = scores[s][a];
+                if (roster.get(s).scores[a] > max) {
+                    max = roster.get(s).scores[a];
                 }
             }
-            System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", assignNames[a], catNames[assignCats[a]],
-                    pointsPossible[a], total / names.length, min, max);
+            System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", assignments.get(a).name,
+                    assignments.get(a).category,
+                    assignments.get(a).points, total / roster.size(), min, max);
         }
     }
 
@@ -328,6 +342,25 @@ public class Gradebook {
                 { 9, 9, 16, 7, 17, 21, 24, 70, 110 },
         };
 
+        ArrayList<assignment> assignments = new ArrayList<assignment>();
+
+        for (int i = 0; i < assignNames.length; i++) {
+            assignment temp = new assignment();
+            temp.name = assignNames[i];
+            temp.points = pointsPossible[i];
+            if (assignCats[i] == 0) {
+                temp.weight = catWeights[0];
+                temp.category = catNames[0];
+            } else if (assignCats[i] == 1) {
+                temp.weight = catWeights[1];
+                temp.category = catNames[1];
+            } else if (assignCats[1] == 2) {
+                temp.weight = catWeights[2];
+                temp.category = catNames[2];
+            }
+            assignments.add(temp);
+        }
+
         ArrayList<student> roster = new ArrayList<student>();
         for (int i = 0; i < names.length; i++) {
             student temp = new student();
@@ -379,14 +412,14 @@ public class Gradebook {
                 if (args.length != 1) {
                     error(usage, 0);
                 } else {
-                    assignments(assignNames, scores, names, pointsPossible, catNames, assignCats);
+                    assignments(assignments, roster);
                 }
                 break;
             case "distribution":
                 if (args.length != 1) {
                     error(usage, 0);
                 } else {
-                    distribution(names, catNames, catDropLowest, assignNames, assignCats, scores, pointsPossible,
+                    distribution(roster, catNames, catDropLowest, assignNames, assignCats, scores, pointsPossible,
                             catWeights);
                 }
                 break;

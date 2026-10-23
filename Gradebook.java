@@ -252,58 +252,6 @@ public class Gradebook {
         System.exit(0);
     }
 
-    private void branch(String[] args, String usage, String[] catNames, double[] catWeights, boolean[] catDropLowest,
-            String[] assignNames, int[] assignCats, double[] pointsPossible,
-            String[] names, int[] ids, double[][] scores) {
-        if (args.length == 0) {
-            error(usage);
-        }
-        switch (args[0]) {
-            case "grades":
-                if (args.length > 1) {
-                    error(usage);
-                } else {
-                    grades(names, catNames, catDropLowest, assignCats, scores, pointsPossible, catWeights, ids,
-                            assignNames);
-                }
-                break;
-            case "top":
-                if (args.length != 2) {
-                    error(usage);
-                } else {
-                    top(args[1], ids, names, catNames, assignNames, assignCats, scores, pointsPossible, catDropLowest,
-                            catWeights);
-                }
-                break;
-            case "student":
-                if (args.length != 2) {
-                    error(usage);
-                } else {
-                    student(args[1], ids, names, catNames, catDropLowest, assignNames, assignCats, scores,
-                            pointsPossible, catWeights);
-                }
-                break;
-            case "assignments":
-                if (args.length != 1) {
-                    error(usage);
-                } else {
-                    assignments(assignNames, scores, names, pointsPossible, catNames, assignCats);
-                }
-                break;
-            case "distribution":
-                if (args.length != 1) {
-                    error(usage);
-                } else {
-                    distribution(names, catNames, catDropLowest, assignNames, assignCats, scores, pointsPossible,
-                            catWeights);
-                }
-                break;
-            default:
-                System.err.println("Unknown command: " + args[0]);
-                error(usage);
-        }
-    }
-
     private void error(String usage) {
         System.err.println(usage);
         System.exit(1);
@@ -374,7 +322,52 @@ public class Gradebook {
                 + "  assignments     score statistics for each assignment\n"
                 + "  distribution    how many students earned each letter grade";
 
-        branch(args, usage, catNames, catWeights, catDropLowest, assignNames, assignCats, pointsPossible, names, ids,
-                scores);
+        if (args.length == 0) {
+            error(usage);
+        }
+        switch (args[0]) {
+            case "grades":
+                if (args.length > 1) {
+                    error(usage);
+                } else {
+                    grades(names, catNames, catDropLowest, assignCats, scores, pointsPossible, catWeights, ids,
+                            assignNames);
+                }
+                break;
+            case "top":
+                if (args.length != 2) {
+                    error(usage);
+                } else {
+                    top(args[1], ids, names, catNames, assignNames, assignCats, scores, pointsPossible, catDropLowest,
+                            catWeights);
+                }
+                break;
+            case "student":
+                if (args.length != 2) {
+                    error(usage);
+                } else {
+                    student(args[1], ids, names, catNames, catDropLowest, assignNames, assignCats, scores,
+                            pointsPossible, catWeights);
+                }
+                break;
+            case "assignments":
+                if (args.length != 1) {
+                    error(usage);
+                } else {
+                    assignments(assignNames, scores, names, pointsPossible, catNames, assignCats);
+                }
+                break;
+            case "distribution":
+                if (args.length != 1) {
+                    error(usage);
+                } else {
+                    distribution(names, catNames, catDropLowest, assignNames, assignCats, scores, pointsPossible,
+                            catWeights);
+                }
+                break;
+            default:
+                System.err.println("Unknown command: " + args[0]);
+                error(usage);
+        }
     }
 }

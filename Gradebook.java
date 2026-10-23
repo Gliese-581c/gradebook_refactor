@@ -16,6 +16,51 @@
  */
 public class Gradebook {
 
+    private void distribution(String[] names, String[] catNames, boolean[] catDropLowest, String[] assignNames,
+            int[] assignCats, double[][] scores, double[] pointsPossible, double[] catWeights) {
+        String[] letters = { "A", "B", "C", "D", "F" };
+        int[] counts = new int[letters.length];
+        for (int s = 0; s < names.length; s++) {
+            double weighted = 0;
+            for (int c = 0; c < catNames.length; c++) {
+                int dropped = -1;
+                if (catDropLowest[c]) {
+                    double lowest = Double.MAX_VALUE;
+                    for (int a = 0; a < assignNames.length; a++) {
+                        if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
+                            lowest = scores[s][a] / pointsPossible[a];
+                            dropped = a;
+                        }
+                    }
+                }
+                double earned = 0;
+                double possible = 0;
+                for (int a = 0; a < assignNames.length; a++) {
+                    if (assignCats[a] == c && a != dropped) {
+                        earned += scores[s][a];
+                        possible += pointsPossible[a];
+                    }
+                }
+                weighted += catWeights[c] * (earned / possible);
+            }
+            double grade = weighted * 100;
+            if (grade >= 90) {
+                counts[0]++;
+            } else if (grade >= 80) {
+                counts[1]++;
+            } else if (grade >= 70) {
+                counts[2]++;
+            } else if (grade >= 60) {
+                counts[3]++;
+            } else {
+                counts[4]++;
+            }
+        }
+        for (int i = 0; i < letters.length; i++) {
+            System.out.printf("%s %2d  %s%n", letters[i], counts[i], "*".repeat(counts[i]));
+        }
+    }
+
     private void assignments(String[] assignNames, double[][] scores, String[] names, double[] pointsPossible,
             String[] catNames, int[] assignCats) {
         System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
@@ -246,7 +291,12 @@ public class Gradebook {
                 }
                 break;
             case "distribution":
-                // distribution;
+                if (args.length != 1) {
+                    error(usage);
+                } else {
+                    distribution(names, catNames, catDropLowest, assignNames, assignCats, scores, pointsPossible,
+                            catWeights);
+                }
                 break;
             default:
                 System.err.println("Unknown command: " + args[0]);
@@ -326,58 +376,5 @@ public class Gradebook {
 
         branch(args, usage, catNames, catWeights, catDropLowest, assignNames, assignCats, pointsPossible, names, ids,
                 scores);
-        String command = args[0];
-        if (command.equals("assignments")) {
-            if (args.length != 1) {
-                error(usage);
-            }
-
-        } else if (command.equals("distribution")) {
-            if (args.length != 1) {
-                error(usage);
-            }
-            String[] letters = { "A", "B", "C", "D", "F" };
-            int[] counts = new int[letters.length];
-            for (int s = 0; s < names.length; s++) {
-                double weighted = 0;
-                for (int c = 0; c < catNames.length; c++) {
-                    int dropped = -1;
-                    if (catDropLowest[c]) {
-                        double lowest = Double.MAX_VALUE;
-                        for (int a = 0; a < assignNames.length; a++) {
-                            if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
-                                lowest = scores[s][a] / pointsPossible[a];
-                                dropped = a;
-                            }
-                        }
-                    }
-                    double earned = 0;
-                    double possible = 0;
-                    for (int a = 0; a < assignNames.length; a++) {
-                        if (assignCats[a] == c && a != dropped) {
-                            earned += scores[s][a];
-                            possible += pointsPossible[a];
-                        }
-                    }
-                    weighted += catWeights[c] * (earned / possible);
-                }
-                double grade = weighted * 100;
-                if (grade >= 90) {
-                    counts[0]++;
-                } else if (grade >= 80) {
-                    counts[1]++;
-                } else if (grade >= 70) {
-                    counts[2]++;
-                } else if (grade >= 60) {
-                    counts[3]++;
-                } else {
-                    counts[4]++;
-                }
-            }
-            for (int i = 0; i < letters.length; i++) {
-                System.out.printf("%s %2d  %s%n", letters[i], counts[i], "*".repeat(counts[i]));
-            }
-
-        }
     }
 }

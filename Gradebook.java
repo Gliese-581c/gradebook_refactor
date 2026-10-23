@@ -1,3 +1,4 @@
+
 /**
  * Print reports from a course gradebook.
  *
@@ -14,6 +15,14 @@
  * the student scored the lowest percentage on. The final grade is the
  * weighted sum of the category grades.
  */
+import java.util.*;
+
+class student {
+    String name;
+    int id;
+    double[] scores = new double[9];
+}
+
 public class Gradebook {
 
     private void distribution(String[] names, String[] catNames, boolean[] catDropLowest, String[] assignNames,
@@ -88,8 +97,7 @@ public class Gradebook {
         try {
             id = Integer.parseInt(args);
         } catch (NumberFormatException e) {
-            System.err.println("Not a number: " + args);
-            System.exit(1);
+            error(args, 1);
         }
         int s = -1;
         for (int i = 0; i < ids.length; i++) {
@@ -101,7 +109,6 @@ public class Gradebook {
             System.err.println("No student with ID " + id);
             System.exit(1);
         }
-
         System.out.println(names[s] + " (" + ids[s] + ")");
         double weighted = 0;
         for (int c = 0; c < catNames.length; c++) {
@@ -151,12 +158,10 @@ public class Gradebook {
         try {
             n = Integer.parseInt(args);
         } catch (NumberFormatException e) {
-            System.err.println("Not a number: " + args);
-            System.exit(1);
+            error(args, 1);
         }
         if (n < 1) {
-            System.err.println("N must be at least 1, not " + n);
-            System.exit(1);
+            error(args, 2);
         }
 
         double[] grades = new double[names.length];
@@ -220,18 +225,18 @@ public class Gradebook {
         }
     }
 
-    private void grades(String[] names, String[] catNames, boolean[] catDropLowest, int[] assignCats, double[][] scores,
-            double[] pointsPossible, double[] catWeights, int[] ids, String[] assignNames) {
+    private void grades(ArrayList<student> roster, String[] catNames, boolean[] catDropLowest, int[] assignCats,
+            double[] pointsPossible, double[] catWeights, String[] assignNames) {
         System.out.printf("%-14s %5s %7s  %s%n", "Name", "ID", "Grade", "Letter");
-        for (int s = 0; s < names.length; s++) {
+        for (int s = 0; s < roster.size(); s++) {
             double weighted = 0;
             for (int c = 0; c < catNames.length; c++) {
                 int dropped = -1;
                 if (catDropLowest[c]) {
                     double lowest = Double.MAX_VALUE;
                     for (int a = 0; a < assignNames.length; a++) {
-                        if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
-                            lowest = scores[s][a] / pointsPossible[a];
+                        if (assignCats[a] == c && roster.get(s).scores[a] / pointsPossible[a] < lowest) {
+                            lowest = roster.get(s).scores[a] / pointsPossible[a];
                             dropped = a;
                         }
                     }
@@ -240,21 +245,30 @@ public class Gradebook {
                 double possible = 0;
                 for (int a = 0; a < assignNames.length; a++) {
                     if (assignCats[a] == c && a != dropped) {
-                        earned += scores[s][a];
+                        earned += roster.get(s).scores[a];
                         possible += pointsPossible[a];
                     }
                 }
                 weighted += catWeights[c] * (earned / possible);
             }
             double grade = weighted * 100;
-            System.out.printf("%-14s %5d %7.2f  %s%n", names[s], ids[s], grade, letterGrade(grade));
+            System.out.printf("%-14s %5d %7.2f  %s%n", roster.get(s).name, roster.get(s).id, grade, letterGrade(grade));
         }
-        System.exit(0);
     }
 
-    private void error(String usage) {
-        System.err.println(usage);
-        System.exit(1);
+    private void error(String output, int option) {
+        switch (option) {
+            case 0:
+                System.err.println(output);
+                System.exit(1);
+            case 1:
+                System.err.println("Not a number: " + output);
+                System.exit(1);
+            case 2:
+                System.err.println("N must be at least 1, not " + output);
+                System.exit(1);
+        }
+
     }
 
     private String letterGrade(double grade) {
@@ -314,6 +328,17 @@ public class Gradebook {
                 { 9, 9, 16, 7, 17, 21, 24, 70, 110 },
         };
 
+        ArrayList<student> roster = new ArrayList<student>();
+        for (int i = 0; i < names.length; i++) {
+            student temp = new student();
+            temp.name = names[i];
+            temp.id = ids[i];
+            for (int j = 0; j < scores[i].length; j++) {
+                temp.scores[j] = scores[i][j];
+            }
+            roster.add(temp);
+        }
+
         String usage = "Usage: java Gradebook COMMAND [ARG]\n"
                 + "Commands:\n"
                 + "  grades          every student's weighted grade and letter grade\n"
@@ -323,20 +348,20 @@ public class Gradebook {
                 + "  distribution    how many students earned each letter grade";
 
         if (args.length == 0) {
-            error(usage);
+            error(usage, 0);
         }
         switch (args[0]) {
             case "grades":
                 if (args.length > 1) {
-                    error(usage);
+                    error(usage, 0);
                 } else {
-                    grades(names, catNames, catDropLowest, assignCats, scores, pointsPossible, catWeights, ids,
+                    grades(roster, catNames, catDropLowest, assignCats, pointsPossible, catWeights,
                             assignNames);
                 }
                 break;
             case "top":
                 if (args.length != 2) {
-                    error(usage);
+                    error(usage, 0);
                 } else {
                     top(args[1], ids, names, catNames, assignNames, assignCats, scores, pointsPossible, catDropLowest,
                             catWeights);
@@ -344,7 +369,7 @@ public class Gradebook {
                 break;
             case "student":
                 if (args.length != 2) {
-                    error(usage);
+                    error(usage, 0);
                 } else {
                     student(args[1], ids, names, catNames, catDropLowest, assignNames, assignCats, scores,
                             pointsPossible, catWeights);
@@ -352,14 +377,14 @@ public class Gradebook {
                 break;
             case "assignments":
                 if (args.length != 1) {
-                    error(usage);
+                    error(usage, 0);
                 } else {
                     assignments(assignNames, scores, names, pointsPossible, catNames, assignCats);
                 }
                 break;
             case "distribution":
                 if (args.length != 1) {
-                    error(usage);
+                    error(usage, 0);
                 } else {
                     distribution(names, catNames, catDropLowest, assignNames, assignCats, scores, pointsPossible,
                             catWeights);
@@ -367,7 +392,8 @@ public class Gradebook {
                 break;
             default:
                 System.err.println("Unknown command: " + args[0]);
-                error(usage);
+                error(usage, 0);
         }
+        System.exit(0);
     }
 }

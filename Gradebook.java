@@ -16,6 +16,153 @@
  */
 public class Gradebook {
 
+    private void top(String args, int[] ids, String[] names, String[] catNames, String[] assignNames, int[] assignCats,
+            double[][] scores, double[] pointsPossible, boolean[] catDropLowest, double[] catWeights) {
+
+        int n = 0;
+        try {
+            n = Integer.parseInt(args);
+        } catch (NumberFormatException e) {
+            System.err.println("Not a number: " + args);
+            System.exit(1);
+        }
+        if (n < 1) {
+            System.err.println("N must be at least 1, not " + n);
+            System.exit(1);
+        }
+
+        double[] grades = new double[names.length];
+        for (int s = 0; s < names.length; s++) {
+            for (int c = 0; c < catNames.length; c++) {
+                double earned = 0;
+                double possible = 0;
+                double lowestPct = Double.MAX_VALUE;
+                double lowestEarned = 0;
+                double lowestPossible = 0;
+                for (int a = 0; a < assignNames.length; a++) {
+                    if (assignCats[a] == c) {
+                        earned += scores[s][a];
+                        possible += pointsPossible[a];
+                        if (scores[s][a] / pointsPossible[a] < lowestPct) {
+                            lowestPct = scores[s][a] / pointsPossible[a];
+                            lowestEarned = scores[s][a];
+                            lowestPossible = pointsPossible[a];
+                        }
+                    }
+                }
+                if (catDropLowest[c]) {
+                    earned -= lowestEarned;
+                    possible -= lowestPossible;
+                }
+                grades[s] += catWeights[c] * (earned / possible);
+            }
+            grades[s] = grades[s] * 100;
+        }
+
+        // sort everything by grade, highest first. This is
+        // selection sort. It sure would be nice to be able to
+        // use Arrays.sort or Collections.sort, but we can't
+        // do that due to the way the data is currently structured
+        // (HINT HINT)
+        for (int i = 0; i < names.length - 1; i++) {
+            int best = i;
+            for (int j = i + 1; j < names.length; j++) {
+                if (grades[j] > grades[best]) {
+                    best = j;
+                }
+            }
+            String tempName = names[i];
+            names[i] = names[best];
+            names[best] = tempName;
+            int tempId = ids[i];
+            ids[i] = ids[best];
+            ids[best] = tempId;
+            double[] tempScores = scores[i];
+            scores[i] = scores[best];
+            scores[best] = tempScores;
+            double tempGrade = grades[i];
+            grades[i] = grades[best];
+            grades[best] = tempGrade;
+        }
+
+        System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
+        for (int i = 0; i < n && i < names.length; i++) {
+            System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, names[i], ids[i], grades[i],
+                    letterGrade(grades[i]));
+        }
+    }
+
+    private void grades(String[] names, String[] catNames, boolean[] catDropLowest, int[] assignCats, double[][] scores,
+            double[] pointsPossible, double[] catWeights, int[] ids, String[] assignNames) {
+        System.out.printf("%-14s %5s %7s  %s%n", "Name", "ID", "Grade", "Letter");
+        for (int s = 0; s < names.length; s++) {
+            double weighted = 0;
+            for (int c = 0; c < catNames.length; c++) {
+                int dropped = -1;
+                if (catDropLowest[c]) {
+                    double lowest = Double.MAX_VALUE;
+                    for (int a = 0; a < assignNames.length; a++) {
+                        if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
+                            lowest = scores[s][a] / pointsPossible[a];
+                            dropped = a;
+                        }
+                    }
+                }
+                double earned = 0;
+                double possible = 0;
+                for (int a = 0; a < assignNames.length; a++) {
+                    if (assignCats[a] == c && a != dropped) {
+                        earned += scores[s][a];
+                        possible += pointsPossible[a];
+                    }
+                }
+                weighted += catWeights[c] * (earned / possible);
+            }
+            double grade = weighted * 100;
+            System.out.printf("%-14s %5d %7.2f  %s%n", names[s], ids[s], grade, letterGrade(grade));
+        }
+        System.exit(0);
+    }
+
+    private void branch(String[] args, String usage, String[] catNames, double[] catWeights, boolean[] catDropLowest,
+            String[] assignNames, int[] assignCats, double[] pointsPossible,
+            String[] names, int[] ids, double[][] scores) {
+        if (args.length == 0) {
+            error(usage);
+        }
+        switch (args[0]) {
+            case "grades":
+                grades(names, catNames, catDropLowest, assignCats, scores, pointsPossible, catWeights, ids,
+                        assignNames);
+                break;
+            case "top":
+                if (args.length != 2) {
+                    error(usage);
+                } else {
+                    top(args[1], ids, names, catNames, assignNames, assignCats, scores, pointsPossible, catDropLowest,
+                            catWeights);
+                }
+                break;
+            case "student":
+                // student();
+                break;
+            case "assignments":
+                // assignments();
+                break;
+            case "distribution":
+                // distribution;
+                break;
+            default:
+                System.err.println("Unknown command: " + args[0]);
+                error(usage);
+        }
+    }
+
+    private void error(String usage) {
+        System.err.println(usage);
+        System.exit(1);
+    }
+
     private String letterGrade(double grade) {
         String letter;
         if (grade >= 90) {
@@ -81,126 +228,12 @@ public class Gradebook {
                 + "  assignments     score statistics for each assignment\n"
                 + "  distribution    how many students earned each letter grade";
 
-        if (args.length == 0) {
-            System.err.println(usage);
-            System.exit(1);
-        }
+        branch(args, usage, catNames, catWeights, catDropLowest, assignNames, assignCats, pointsPossible, names, ids,
+                scores);
         String command = args[0];
-
-        if (command.equals("grades")) {
-            if (args.length != 1) {
-                System.err.println(usage);
-                System.exit(1);
-            }
-            System.out.printf("%-14s %5s %7s  %s%n", "Name", "ID", "Grade", "Letter");
-            for (int s = 0; s < names.length; s++) {
-                double weighted = 0;
-                for (int c = 0; c < catNames.length; c++) {
-                    int dropped = -1;
-                    if (catDropLowest[c]) {
-                        double lowest = Double.MAX_VALUE;
-                        for (int a = 0; a < assignNames.length; a++) {
-                            if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
-                                lowest = scores[s][a] / pointsPossible[a];
-                                dropped = a;
-                            }
-                        }
-                    }
-                    double earned = 0;
-                    double possible = 0;
-                    for (int a = 0; a < assignNames.length; a++) {
-                        if (assignCats[a] == c && a != dropped) {
-                            earned += scores[s][a];
-                            possible += pointsPossible[a];
-                        }
-                    }
-                    weighted += catWeights[c] * (earned / possible);
-                }
-                double grade = weighted * 100;
-                System.out.printf("%-14s %5d %7.2f  %s%n", names[s], ids[s], grade, letterGrade(grade));
-            }
-
-        } else if (command.equals("top")) {
+        if (command.equals("student")) {
             if (args.length != 2) {
-                System.err.println(usage);
-                System.exit(1);
-            }
-            int n = 0;
-            try {
-                n = Integer.parseInt(args[1]);
-            } catch (NumberFormatException e) {
-                System.err.println("Not a number: " + args[1]);
-                System.exit(1);
-            }
-            if (n < 1) {
-                System.err.println("N must be at least 1, not " + n);
-                System.exit(1);
-            }
-
-            double[] grades = new double[names.length];
-            for (int s = 0; s < names.length; s++) {
-                for (int c = 0; c < catNames.length; c++) {
-                    double earned = 0;
-                    double possible = 0;
-                    double lowestPct = Double.MAX_VALUE;
-                    double lowestEarned = 0;
-                    double lowestPossible = 0;
-                    for (int a = 0; a < assignNames.length; a++) {
-                        if (assignCats[a] == c) {
-                            earned += scores[s][a];
-                            possible += pointsPossible[a];
-                            if (scores[s][a] / pointsPossible[a] < lowestPct) {
-                                lowestPct = scores[s][a] / pointsPossible[a];
-                                lowestEarned = scores[s][a];
-                                lowestPossible = pointsPossible[a];
-                            }
-                        }
-                    }
-                    if (catDropLowest[c]) {
-                        earned -= lowestEarned;
-                        possible -= lowestPossible;
-                    }
-                    grades[s] += catWeights[c] * (earned / possible);
-                }
-                grades[s] = grades[s] * 100;
-            }
-
-            // sort everything by grade, highest first. This is
-            // selection sort. It sure would be nice to be able to
-            // use Arrays.sort or Collections.sort, but we can't
-            // do that due to the way the data is currently structured
-            // (HINT HINT)
-            for (int i = 0; i < names.length - 1; i++) {
-                int best = i;
-                for (int j = i + 1; j < names.length; j++) {
-                    if (grades[j] > grades[best]) {
-                        best = j;
-                    }
-                }
-                String tempName = names[i];
-                names[i] = names[best];
-                names[best] = tempName;
-                int tempId = ids[i];
-                ids[i] = ids[best];
-                ids[best] = tempId;
-                double[] tempScores = scores[i];
-                scores[i] = scores[best];
-                scores[best] = tempScores;
-                double tempGrade = grades[i];
-                grades[i] = grades[best];
-                grades[best] = tempGrade;
-            }
-
-            System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
-            for (int i = 0; i < n && i < names.length; i++) {
-                System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, names[i], ids[i], grades[i],
-                        letterGrade(grades[i]));
-            }
-
-        } else if (command.equals("student")) {
-            if (args.length != 2) {
-                System.err.println(usage);
-                System.exit(1);
+                error(usage);
             }
             int id = 0;
             try {
@@ -263,8 +296,7 @@ public class Gradebook {
 
         } else if (command.equals("assignments")) {
             if (args.length != 1) {
-                System.err.println(usage);
-                System.exit(1);
+                error(usage);
             }
             System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
             for (int a = 0; a < assignNames.length; a++) {
@@ -286,8 +318,7 @@ public class Gradebook {
 
         } else if (command.equals("distribution")) {
             if (args.length != 1) {
-                System.err.println(usage);
-                System.exit(1);
+                error(usage);
             }
             String[] letters = { "A", "B", "C", "D", "F" };
             int[] counts = new int[letters.length];
@@ -331,10 +362,6 @@ public class Gradebook {
                 System.out.printf("%s %2d  %s%n", letters[i], counts[i], "*".repeat(counts[i]));
             }
 
-        } else {
-            System.err.println("Unknown command: " + command);
-            System.err.println(usage);
-            System.exit(1);
         }
     }
 }

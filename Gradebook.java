@@ -29,11 +29,6 @@ class student {
     String name;
     int id;
     double[] scores = new double[9];
-    double total = 0;
-
-    public String toString() {
-        return name + " (" + id + ") " + total;
-    }
 }
 
 public class Gradebook {

@@ -17,11 +17,15 @@
  */
 import java.util.*;
 
-class assignment {
+class category {
     String name;
-    String category;
     double weight;
     boolean drop;
+}
+
+class assignment {
+    String name;
+    int cat;
     double points;
 }
 
@@ -79,7 +83,8 @@ public class Gradebook {
         }
     }
 
-    private void assignments(ArrayList<assignment> assignments, ArrayList<student> roster) {
+    private void assignments(ArrayList<assignment> assignments, ArrayList<student> roster,
+            ArrayList<category> categories) {
         System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
         for (int a = 0; a < assignments.size(); a++) {
             double total = 0;
@@ -95,7 +100,7 @@ public class Gradebook {
                 }
             }
             System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", assignments.get(a).name,
-                    assignments.get(a).category,
+                    categories.get(assignments.get(a).cat).name,
                     assignments.get(a).points, total / roster.size(), min, max);
         }
     }
@@ -337,23 +342,20 @@ public class Gradebook {
                 { 9, 9, 16, 7, 17, 21, 24, 70, 110 },
         };
 
-        ArrayList<assignment> assignments = new ArrayList<assignment>();
+        ArrayList<category> categories = new ArrayList<category>();
+        for (int i = 0; i < catNames.length; i++) {
+            category temp = new category();
+            temp.name = catNames[i];
+            temp.weight = catWeights[i];
+            temp.drop = catDropLowest[i];
+        }
 
+        ArrayList<assignment> assignments = new ArrayList<assignment>();
         for (int i = 0; i < assignNames.length; i++) {
             assignment temp = new assignment();
             temp.name = assignNames[i];
+            temp.cat = assignCats[i];
             temp.points = pointsPossible[i];
-            if (assignCats[i] == 0) {
-                temp.weight = catWeights[0];
-                temp.category = catNames[0];
-            } else if (assignCats[i] == 1) {
-                temp.weight = catWeights[1];
-                temp.category = catNames[1];
-            } else if (assignCats[1] == 2) {
-                temp.weight = catWeights[2];
-                temp.category = catNames[2];
-            }
-            assignments.add(temp);
         }
 
         ArrayList<student> roster = new ArrayList<student>();
@@ -407,7 +409,7 @@ public class Gradebook {
                 if (args.length != 1) {
                     error(usage, 0);
                 } else {
-                    assignments(assignments, roster);
+                    assignments(assignments, roster, categories);
                 }
                 break;
             case "distribution":

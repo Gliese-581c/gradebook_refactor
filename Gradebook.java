@@ -348,6 +348,7 @@ public class Gradebook {
             temp.name = catNames[i];
             temp.weight = catWeights[i];
             temp.drop = catDropLowest[i];
+            categories.add(temp);
         }
 
         ArrayList<assignment> assignments = new ArrayList<assignment>();
@@ -356,6 +357,7 @@ public class Gradebook {
             temp.name = assignNames[i];
             temp.cat = assignCats[i];
             temp.points = pointsPossible[i];
+            assignments.add(temp);
         }
 
         ArrayList<student> roster = new ArrayList<student>();

@@ -167,8 +167,8 @@ public class Gradebook {
         System.out.printf("Final grade: %.2f (%s)%n", grade, letterGrade(grade));
     }
 
-    private void top(String args, ArrayList<student> students, ArrayList<assignment> assignments, String[] catNames,
-            boolean[] catDropLowest, double[] catWeights) {
+    private void top(String args, ArrayList<student> students, ArrayList<assignment> assignments,
+            ArrayList<category> categories) {
 
         int n = 0;
         try {
@@ -182,7 +182,7 @@ public class Gradebook {
 
         double[] grades = new double[students.size()];
         for (int s = 0; s < students.size(); s++) {
-            for (int c = 0; c < catNames.length; c++) {
+            for (int c = 0; c < categories.size(); c++) {
                 double earned = 0;
                 double possible = 0;
                 double lowestPct = Double.MAX_VALUE;
@@ -199,11 +199,11 @@ public class Gradebook {
                         }
                     }
                 }
-                if (catDropLowest[c]) {
+                if (categories.get(c).drop) {
                     earned -= lowestEarned;
                     possible -= lowestPossible;
                 }
-                grades[s] += catWeights[c] * (earned / possible);
+                grades[s] += categories.get(c).weight * (earned / possible);
             }
             grades[s] = grades[s] * 100;
         }
@@ -398,8 +398,7 @@ public class Gradebook {
                 if (args.length != 2) {
                     error(usage, 0);
                 } else {
-                    top(args[1], students, assignments, catNames, catDropLowest,
-                            catWeights);
+                    top(args[1], students, assignments, categories);
                 }
                 break;
             case "student":

@@ -105,9 +105,8 @@ public class Gradebook {
         }
     }
 
-    private void student(String args, ArrayList<student> students, ArrayList<assignment> assignments, String[] catNames,
-            boolean[] catDropLowest,
-            double[] catWeights) {
+    private void student(String args, ArrayList<student> students, ArrayList<assignment> assignments,
+            ArrayList<category> categories) {
         int id = 0;
         try {
             id = Integer.parseInt(args);
@@ -126,9 +125,9 @@ public class Gradebook {
         }
         System.out.println(students.get(s).name + " (" + students.get(s).id + ")");
         double weighted = 0;
-        for (int c = 0; c < catNames.length; c++) {
+        for (int c = 0; c < categories.size(); c++) {
             int dropped = -1;
-            if (catDropLowest[c]) {
+            if (categories.get(c).drop) {
                 double lowest = Double.MAX_VALUE;
                 for (int a = 0; a < assignments.size(); a++) {
                     if (assignments.get(a).cat == c && students.get(s).scores[a] / assignments.get(a).points < lowest) {
@@ -138,10 +137,11 @@ public class Gradebook {
                 }
             }
             System.out.println();
-            if (catDropLowest[c]) {
-                System.out.printf("%s (%.0f%%, lowest score dropped)%n", catNames[c], catWeights[c] * 100);
+            if (categories.get(c).drop) {
+                System.out.printf("%s (%.0f%%, lowest score dropped)%n", categories.get(c).name,
+                        categories.get(c).weight * 100);
             } else {
-                System.out.printf("%s (%.0f%%)%n", catNames[c], catWeights[c] * 100);
+                System.out.printf("%s (%.0f%%)%n", categories.get(c).name, categories.get(c).weight * 100);
             }
             double earned = 0;
             double possible = 0;
@@ -160,15 +160,15 @@ public class Gradebook {
                 }
             }
             System.out.printf("  %-8s %10.2f%%%n", "Total", earned / possible * 100);
-            weighted += catWeights[c] * (earned / possible);
+            weighted += categories.get(c).weight * (earned / possible);
         }
         double grade = weighted * 100;
         System.out.println();
         System.out.printf("Final grade: %.2f (%s)%n", grade, letterGrade(grade));
     }
 
-    private void top(String args, ArrayList<assignment> assignments, int[] ids, String[] names, String[] catNames,
-            double[][] scores, boolean[] catDropLowest, double[] catWeights) {
+    private void top(String args, ArrayList<student> students, ArrayList<assignment> assignments, String[] catNames,
+            boolean[] catDropLowest, double[] catWeights) {
 
         int n = 0;
         try {
@@ -180,8 +180,8 @@ public class Gradebook {
             error(args, 2);
         }
 
-        double[] grades = new double[names.length];
-        for (int s = 0; s < names.length; s++) {
+        double[] grades = new double[students.size()];
+        for (int s = 0; s < students.size(); s++) {
             for (int c = 0; c < catNames.length; c++) {
                 double earned = 0;
                 double possible = 0;
@@ -190,11 +190,11 @@ public class Gradebook {
                 double lowestPossible = 0;
                 for (int a = 0; a < assignments.size(); a++) {
                     if (assignments.get(a).cat == c) {
-                        earned += scores[s][a];
+                        earned += students.get(s).scores[a];
                         possible += assignments.get(a).points;
-                        if (scores[s][a] / assignments.get(a).points < lowestPct) {
-                            lowestPct = scores[s][a] / assignments.get(a).points;
-                            lowestEarned = scores[s][a];
+                        if (students.get(s).scores[a] / assignments.get(a).points < lowestPct) {
+                            lowestPct = students.get(s).scores[a] / assignments.get(a).points;
+                            lowestEarned = students.get(s).scores[a];
                             lowestPossible = assignments.get(a).points;
                         }
                     }
@@ -213,30 +213,30 @@ public class Gradebook {
         // use Arrays.sort or Collections.sort, but we can't
         // do that due to the way the data is currently structured
         // (HINT HINT)
-        for (int i = 0; i < names.length - 1; i++) {
+        for (int i = 0; i < students.size() - 1; i++) {
             int best = i;
-            for (int j = i + 1; j < names.length; j++) {
+            for (int j = i + 1; j < students.size(); j++) {
                 if (grades[j] > grades[best]) {
                     best = j;
                 }
             }
-            String tempName = names[i];
-            names[i] = names[best];
-            names[best] = tempName;
-            int tempId = ids[i];
-            ids[i] = ids[best];
-            ids[best] = tempId;
-            double[] tempScores = scores[i];
-            scores[i] = scores[best];
-            scores[best] = tempScores;
+            String tempName = students.get(i).name;
+            students.get(i).name = students.get(best).name;
+            students.get(best).name = tempName;
+            int tempId = students.get(i).id;
+            students.get(i).id = students.get(best).id;
+            students.get(best).id = tempId;
+            double[] tempScores = students.get(i).scores;
+            students.get(i).scores = students.get(best).scores;
+            students.get(best).scores = tempScores;
             double tempGrade = grades[i];
             grades[i] = grades[best];
             grades[best] = tempGrade;
         }
 
         System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
-        for (int i = 0; i < n && i < names.length; i++) {
-            System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, names[i], ids[i], grades[i],
+        for (int i = 0; i < n && i < students.size(); i++) {
+            System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, students.get(i).name, students.get(i).id, grades[i],
                     letterGrade(grades[i]));
         }
     }
@@ -398,7 +398,7 @@ public class Gradebook {
                 if (args.length != 2) {
                     error(usage, 0);
                 } else {
-                    top(args[1], assignments, ids, names, catNames, scores, catDropLowest,
+                    top(args[1], students, assignments, catNames, catDropLowest,
                             catWeights);
                 }
                 break;
@@ -406,7 +406,7 @@ public class Gradebook {
                 if (args.length != 2) {
                     error(usage, 0);
                 } else {
-                    student(args[1], students, assignments, catNames, catDropLowest, catWeights);
+                    student(args[1], students, assignments, categories);
                 }
                 break;
             case "assignments":

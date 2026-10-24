@@ -37,9 +37,9 @@ class student {
 
 public class Gradebook {
 
-    private void distribution(ArrayList<student> roster, String[] catNames, boolean[] catDropLowest,
-            String[] assignNames,
-            int[] assignCats, double[][] scores, double[] pointsPossible, double[] catWeights) {
+    private void distribution(ArrayList<student> roster, ArrayList<assignment> assignments, String[] catNames,
+            boolean[] catDropLowest,
+            double[] catWeights) {
         String[] letters = { "A", "B", "C", "D", "F" };
         int[] counts = new int[letters.length];
         for (int s = 0; s < roster.size(); s++) {
@@ -48,19 +48,20 @@ public class Gradebook {
                 int dropped = -1;
                 if (catDropLowest[c]) {
                     double lowest = Double.MAX_VALUE;
-                    for (int a = 0; a < assignNames.length; a++) {
-                        if (assignCats[a] == c && scores[s][a] / pointsPossible[a] < lowest) {
-                            lowest = scores[s][a] / pointsPossible[a];
+                    for (int a = 0; a < assignments.size(); a++) {
+                        if (assignments.get(a).cat == c
+                                && roster.get(s).scores[a] / assignments.get(a).points < lowest) {
+                            lowest = roster.get(s).scores[a] / assignments.get(a).points;
                             dropped = a;
                         }
                     }
                 }
                 double earned = 0;
                 double possible = 0;
-                for (int a = 0; a < assignNames.length; a++) {
-                    if (assignCats[a] == c && a != dropped) {
-                        earned += scores[s][a];
-                        possible += pointsPossible[a];
+                for (int a = 0; a < assignments.size(); a++) {
+                    if (assignments.get(a).cat == c && a != dropped) {
+                        earned += roster.get(s).scores[a];
+                        possible += assignments.get(a).points;
                     }
                 }
                 weighted += catWeights[c] * (earned / possible);
@@ -83,7 +84,7 @@ public class Gradebook {
         }
     }
 
-    private void assignments(ArrayList<assignment> assignments, ArrayList<student> roster,
+    private void assignments(ArrayList<student> roster, ArrayList<assignment> assignments,
             ArrayList<category> categories) {
         System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
         for (int a = 0; a < assignments.size(); a++) {
@@ -105,8 +106,9 @@ public class Gradebook {
         }
     }
 
-    private void student(String args, ArrayList<student> roster, String[] catNames, boolean[] catDropLowest,
-            String[] assignNames, int[] assignCats, double[] pointsPossible, double[] catWeights) {
+    private void student(String args, ArrayList<student> roster, ArrayList<assignment> assignments, String[] catNames,
+            boolean[] catDropLowest,
+            double[] catWeights) {
         int id = 0;
         try {
             id = Integer.parseInt(args);
@@ -129,9 +131,9 @@ public class Gradebook {
             int dropped = -1;
             if (catDropLowest[c]) {
                 double lowest = Double.MAX_VALUE;
-                for (int a = 0; a < assignNames.length; a++) {
-                    if (assignCats[a] == c && roster.get(s).scores[a] / pointsPossible[a] < lowest) {
-                        lowest = roster.get(s).scores[a] / pointsPossible[a];
+                for (int a = 0; a < assignments.size(); a++) {
+                    if (assignments.get(a).cat == c && roster.get(s).scores[a] / assignments.get(a).points < lowest) {
+                        lowest = roster.get(s).scores[a] / assignments.get(a).points;
                         dropped = a;
                     }
                 }
@@ -144,16 +146,17 @@ public class Gradebook {
             }
             double earned = 0;
             double possible = 0;
-            for (int a = 0; a < assignNames.length; a++) {
-                if (assignCats[a] == c) {
+            for (int a = 0; a < assignments.size(); a++) {
+                if (assignments.get(a).cat == c) {
                     if (a == dropped) {
-                        System.out.printf("  %-8s %4.0f / %3.0f  (dropped)%n", assignNames[a], roster.get(s).scores[a],
-                                pointsPossible[a]);
+                        System.out.printf("  %-8s %4.0f / %3.0f  (dropped)%n", assignments.get(a).name,
+                                roster.get(s).scores[a],
+                                assignments.get(a).points);
                     } else {
-                        System.out.printf("  %-8s %4.0f / %3.0f%n", assignNames[a], roster.get(s).scores[a],
-                                pointsPossible[a]);
+                        System.out.printf("  %-8s %4.0f / %3.0f%n", assignments.get(a).name, roster.get(s).scores[a],
+                                assignments.get(a).points);
                         earned += roster.get(s).scores[a];
-                        possible += pointsPossible[a];
+                        possible += assignments.get(a).points;
                     }
                 }
             }
@@ -165,8 +168,8 @@ public class Gradebook {
         System.out.printf("Final grade: %.2f (%s)%n", grade, letterGrade(grade));
     }
 
-    private void top(String args, int[] ids, String[] names, String[] catNames, String[] assignNames, int[] assignCats,
-            double[][] scores, double[] pointsPossible, boolean[] catDropLowest, double[] catWeights) {
+    private void top(String args, ArrayList<assignment> assignments, int[] ids, String[] names, String[] catNames,
+            double[][] scores, boolean[] catDropLowest, double[] catWeights) {
 
         int n = 0;
         try {
@@ -186,14 +189,14 @@ public class Gradebook {
                 double lowestPct = Double.MAX_VALUE;
                 double lowestEarned = 0;
                 double lowestPossible = 0;
-                for (int a = 0; a < assignNames.length; a++) {
-                    if (assignCats[a] == c) {
+                for (int a = 0; a < assignments.size(); a++) {
+                    if (assignments.get(a).cat == c) {
                         earned += scores[s][a];
-                        possible += pointsPossible[a];
-                        if (scores[s][a] / pointsPossible[a] < lowestPct) {
-                            lowestPct = scores[s][a] / pointsPossible[a];
+                        possible += assignments.get(a).points;
+                        if (scores[s][a] / assignments.get(a).points < lowestPct) {
+                            lowestPct = scores[s][a] / assignments.get(a).points;
                             lowestEarned = scores[s][a];
-                            lowestPossible = pointsPossible[a];
+                            lowestPossible = assignments.get(a).points;
                         }
                     }
                 }
@@ -239,8 +242,8 @@ public class Gradebook {
         }
     }
 
-    private void grades(ArrayList<student> roster, String[] catNames, boolean[] catDropLowest, int[] assignCats,
-            double[] pointsPossible, double[] catWeights, String[] assignNames) {
+    private void grades(ArrayList<student> roster, ArrayList<assignment> assignments, String[] catNames,
+            boolean[] catDropLowest, double[] catWeights) {
         System.out.printf("%-14s %5s %7s  %s%n", "Name", "ID", "Grade", "Letter");
         for (int s = 0; s < roster.size(); s++) {
             double weighted = 0;
@@ -248,19 +251,20 @@ public class Gradebook {
                 int dropped = -1;
                 if (catDropLowest[c]) {
                     double lowest = Double.MAX_VALUE;
-                    for (int a = 0; a < assignNames.length; a++) {
-                        if (assignCats[a] == c && roster.get(s).scores[a] / pointsPossible[a] < lowest) {
-                            lowest = roster.get(s).scores[a] / pointsPossible[a];
+                    for (int a = 0; a < assignments.size(); a++) {
+                        if (assignments.get(a).cat == c
+                                && roster.get(s).scores[a] / assignments.get(a).points < lowest) {
+                            lowest = roster.get(s).scores[a] / assignments.get(a).points;
                             dropped = a;
                         }
                     }
                 }
                 double earned = 0;
                 double possible = 0;
-                for (int a = 0; a < assignNames.length; a++) {
-                    if (assignCats[a] == c && a != dropped) {
+                for (int a = 0; a < assignments.size(); a++) {
+                    if (assignments.get(a).cat == c && a != dropped) {
                         earned += roster.get(s).scores[a];
-                        possible += pointsPossible[a];
+                        possible += assignments.get(a).points;
                     }
                 }
                 weighted += catWeights[c] * (earned / possible);
@@ -387,15 +391,14 @@ public class Gradebook {
                 if (args.length > 1) {
                     error(usage, 0);
                 } else {
-                    grades(roster, catNames, catDropLowest, assignCats, pointsPossible, catWeights,
-                            assignNames);
+                    grades(roster, assignments, catNames, catDropLowest, catWeights);
                 }
                 break;
             case "top":
                 if (args.length != 2) {
                     error(usage, 0);
                 } else {
-                    top(args[1], ids, names, catNames, assignNames, assignCats, scores, pointsPossible, catDropLowest,
+                    top(args[1], assignments, ids, names, catNames, scores, catDropLowest,
                             catWeights);
                 }
                 break;
@@ -403,22 +406,21 @@ public class Gradebook {
                 if (args.length != 2) {
                     error(usage, 0);
                 } else {
-                    student(args[1], roster, catNames, catDropLowest, assignNames, assignCats,
-                            pointsPossible, catWeights);
+                    student(args[1], roster, assignments, catNames, catDropLowest, catWeights);
                 }
                 break;
             case "assignments":
                 if (args.length != 1) {
                     error(usage, 0);
                 } else {
-                    assignments(assignments, roster, categories);
+                    assignments(roster, assignments, categories);
                 }
                 break;
             case "distribution":
                 if (args.length != 1) {
                     error(usage, 0);
                 } else {
-                    distribution(roster, catNames, catDropLowest, assignNames, assignCats, scores, pointsPossible,
+                    distribution(roster, assignments, catNames, catDropLowest,
                             catWeights);
                 }
                 break;

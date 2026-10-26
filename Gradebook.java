@@ -34,6 +34,7 @@ class student {
     int id;
     double[] scores = new double[9];
     double total = 0;
+
 }
 
 public class Gradebook {
@@ -79,7 +80,7 @@ public class Gradebook {
                 counts[4]++;
             }
         }
-        for (int i = 0; i < letters.length; i++) {
+        for (int i = 0; i < 5; i++) {
             System.out.printf("%s %2d  %s%n", letters[i], counts[i], "*".repeat(counts[i]));
         }
     }
@@ -181,9 +182,10 @@ public class Gradebook {
             error(args, 2);
         }
 
-        double[] grades = new double[students.size()];
+        double total = 0;
         for (int s = 0; s < students.size(); s++) {
             for (int c = 0; c < categories.size(); c++) {
+
                 double earned = 0;
                 double possible = 0;
                 double lowestPct = Double.MAX_VALUE;
@@ -204,17 +206,12 @@ public class Gradebook {
                     earned -= lowestEarned;
                     possible -= lowestPossible;
                 }
-                grades[s] += categories.get(c).weight * (earned / possible);
+                total += categories.get(c).weight * (earned / possible);
             }
-            grades[s] = grades[s] * 100;
-            students.get(s).total = grades[s];
+            total = total * 100;
+            students.get(s).total = total;
+            total = 0;
         }
-
-        // sort everything by grade, highest first. This is
-        // selection sort. It sure would be nice to be able to
-        // use Arrays.sort or Collections.sort, but we can't
-        // do that due to the way the data is currently structured
-        // (HINT HINT)
 
         Collections.sort(students, (a, b) -> Double.compare(a.total, b.total));
         Collections.reverse(students);
@@ -291,11 +288,49 @@ public class Gradebook {
         return letter;
     }
 
-    public static void main(String[] args) {
-        new Gradebook().run(args);
+    private static ArrayList<student> buildStudents(String[] names, int[] ids, double[][] scores) {
+        ArrayList<student> students = new ArrayList<student>();
+        for (int i = 0; i < names.length; i++) {
+            int tempScore = 0;
+            student temp = new student();
+            temp.name = names[i];
+            temp.id = ids[i];
+            for (int j = 0; j < scores[i].length; j++) {
+                tempScore += scores[i][j];
+                temp.scores[j] = scores[i][j];
+            }
+            temp.total = tempScore;
+            students.add(temp);
+        }
+        return students;
     }
 
-    private void run(String[] args) {
+    private static ArrayList<assignment> buildAssignments(String[] assignNames, int[] assignCats,
+            double[] pointsPossible) {
+        ArrayList<assignment> assignments = new ArrayList<assignment>();
+        for (int i = 0; i < assignNames.length; i++) {
+            assignment temp = new assignment();
+            temp.name = assignNames[i];
+            temp.cat = assignCats[i];
+            temp.points = pointsPossible[i];
+            assignments.add(temp);
+        }
+        return assignments;
+    }
+
+    private static ArrayList<category> buildCats(String[] catNames, double[] catWeights, boolean[] catDropLowest) {
+        ArrayList<category> categories = new ArrayList<category>();
+        for (int i = 0; i < catNames.length; i++) {
+            category temp = new category();
+            temp.name = catNames[i];
+            temp.weight = catWeights[i];
+            temp.drop = catDropLowest[i];
+            categories.add(temp);
+        }
+        return categories;
+    }
+
+    public static void main(String[] args) {
         // The gradebook data is hard-coded into the class. This isn't
         // ideal practice in real life, but for the purposes of this
         // assignment, it's a lot simpler than loading them from a CSV
@@ -319,7 +354,6 @@ public class Gradebook {
                 "Grace Liu", "Hugo Martins" };
         // Corresponding student ids
         int[] ids = { 1041, 1057, 1063, 1072, 1088, 1093, 1105, 1118 };
-
         // Scores. Each row is one student (in the order of the students above)
         double[][] scores = {
                 { 10, 9, 19, 10, 19, 24, 29, 94, 141 },
@@ -332,38 +366,15 @@ public class Gradebook {
                 { 9, 9, 16, 7, 17, 21, 24, 70, 110 },
         };
 
-        ArrayList<category> categories = new ArrayList<category>();
-        for (int i = 0; i < catNames.length; i++) {
-            category temp = new category();
-            temp.name = catNames[i];
-            temp.weight = catWeights[i];
-            temp.drop = catDropLowest[i];
-            categories.add(temp);
-        }
+        ArrayList<student> students = buildStudents(names, ids, scores);
+        ArrayList<assignment> assignments = buildAssignments(assignNames, assignCats, pointsPossible);
+        ArrayList<category> categories = buildCats(catNames, catWeights, catDropLowest);
 
-        ArrayList<assignment> assignments = new ArrayList<assignment>();
-        for (int i = 0; i < assignNames.length; i++) {
-            assignment temp = new assignment();
-            temp.name = assignNames[i];
-            temp.cat = assignCats[i];
-            temp.points = pointsPossible[i];
-            assignments.add(temp);
-        }
+        new Gradebook().run(args, students, assignments, categories);
+    }
 
-        ArrayList<student> students = new ArrayList<student>();
-
-        for (int i = 0; i < names.length; i++) {
-            int tempScore = 0;
-            student temp = new student();
-            temp.name = names[i];
-            temp.id = ids[i];
-            for (int j = 0; j < scores[i].length; j++) {
-                tempScore += scores[i][j];
-                temp.scores[j] = scores[i][j];
-            }
-            temp.total = tempScore;
-            students.add(temp);
-        }
+    private void run(String[] args, ArrayList<student> students, ArrayList<assignment> assignments,
+            ArrayList<category> categories) {
 
         String usage = "Usage: java Gradebook COMMAND [ARG]\n"
                 + "Commands:\n"

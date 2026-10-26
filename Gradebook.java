@@ -273,12 +273,12 @@ public class Gradebook {
         return categories.get(c).drop;
     }
 
-    private String getAssignmentName(int a) {
-        return assignments.get(a).name;
-    }
-
     private String getCatName(int c) {
         return categories.get(c).name;
+    }
+
+    private String getAssignmentName(int a) {
+        return assignments.get(a).name;
     }
 
     private int getCat(int a) {

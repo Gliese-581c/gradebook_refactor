@@ -33,6 +33,7 @@ class student {
     String name;
     int id;
     double[] scores = new double[9];
+    double total = 0;
 }
 
 public class Gradebook {
@@ -206,6 +207,7 @@ public class Gradebook {
                 grades[s] += categories.get(c).weight * (earned / possible);
             }
             grades[s] = grades[s] * 100;
+            students.get(s).total = grades[s];
         }
 
         // sort everything by grade, highest first. This is
@@ -213,31 +215,15 @@ public class Gradebook {
         // use Arrays.sort or Collections.sort, but we can't
         // do that due to the way the data is currently structured
         // (HINT HINT)
-        for (int i = 0; i < students.size() - 1; i++) {
-            int best = i;
-            for (int j = i + 1; j < students.size(); j++) {
-                if (grades[j] > grades[best]) {
-                    best = j;
-                }
-            }
-            String tempName = students.get(i).name;
-            students.get(i).name = students.get(best).name;
-            students.get(best).name = tempName;
-            int tempId = students.get(i).id;
-            students.get(i).id = students.get(best).id;
-            students.get(best).id = tempId;
-            double[] tempScores = students.get(i).scores;
-            students.get(i).scores = students.get(best).scores;
-            students.get(best).scores = tempScores;
-            double tempGrade = grades[i];
-            grades[i] = grades[best];
-            grades[best] = tempGrade;
-        }
+
+        Collections.sort(students, (a, b) -> Double.compare(a.total, b.total));
+        Collections.reverse(students);
 
         System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
         for (int i = 0; i < n && i < students.size(); i++) {
-            System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, students.get(i).name, students.get(i).id, grades[i],
-                    letterGrade(grades[i]));
+            System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, students.get(i).name, students.get(i).id,
+                    students.get(i).total,
+                    letterGrade(students.get(i).total));
         }
     }
 
@@ -365,13 +351,17 @@ public class Gradebook {
         }
 
         ArrayList<student> students = new ArrayList<student>();
+
         for (int i = 0; i < names.length; i++) {
+            int tempScore = 0;
             student temp = new student();
             temp.name = names[i];
             temp.id = ids[i];
             for (int j = 0; j < scores[i].length; j++) {
+                tempScore += scores[i][j];
                 temp.scores[j] = scores[i][j];
             }
+            temp.total = tempScore;
             students.add(temp);
         }
 

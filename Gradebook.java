@@ -39,10 +39,12 @@ class student {
 
 public class Gradebook {
 
+    public static final String[] letters = { "A", "B", "C", "D", "F" };
+    public static int[] counts = new int[letters.length];
+
     private void distribution(ArrayList<student> students, ArrayList<assignment> assignments,
             ArrayList<category> categories) {
-        String[] letters = { "A", "B", "C", "D", "F" };
-        int[] counts = new int[letters.length];
+        // int[] counts = new int[letters.length];
         for (int s = 0; s < students.size(); s++) {
             double weighted = 0;
             for (int c = 0; c < categories.size(); c++) {
@@ -68,19 +70,9 @@ public class Gradebook {
                 weighted += categories.get(c).weight * (earned / possible);
             }
             double grade = weighted * 100;
-            if (grade >= 90) {
-                counts[0]++;
-            } else if (grade >= 80) {
-                counts[1]++;
-            } else if (grade >= 70) {
-                counts[2]++;
-            } else if (grade >= 60) {
-                counts[3]++;
-            } else {
-                counts[4]++;
-            }
+            letterGrade(grade);
         }
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < letters.length; i++) {
             System.out.printf("%s %2d  %s%n", letters[i], counts[i], "*".repeat(counts[i]));
         }
     }
@@ -122,8 +114,7 @@ public class Gradebook {
             }
         }
         if (s == -1) {
-            System.err.println("No student with ID " + id);
-            System.exit(1);
+            error(Integer.toString(id), 3);
         }
         System.out.println(students.get(s).name + " (" + students.get(s).id + ")");
         double weighted = 0;
@@ -138,12 +129,11 @@ public class Gradebook {
                     }
                 }
             }
-            System.out.println();
             if (categories.get(c).drop) {
-                System.out.printf("%s (%.0f%%, lowest score dropped)%n", categories.get(c).name,
+                System.out.printf("\n%s (%.0f%%, lowest score dropped)%n", categories.get(c).name,
                         categories.get(c).weight * 100);
             } else {
-                System.out.printf("%s (%.0f%%)%n", categories.get(c).name, categories.get(c).weight * 100);
+                System.out.printf("\n%s (%.0f%%)%n", categories.get(c).name, categories.get(c).weight * 100);
             }
             double earned = 0;
             double possible = 0;
@@ -165,8 +155,7 @@ public class Gradebook {
             weighted += categories.get(c).weight * (earned / possible);
         }
         double grade = weighted * 100;
-        System.out.println();
-        System.out.printf("Final grade: %.2f (%s)%n", grade, letterGrade(grade));
+        System.out.printf("\nFinal grade: %.2f (%s)%n", grade, letterGrade(grade));
     }
 
     private void top(String args, ArrayList<student> students, ArrayList<assignment> assignments,
@@ -208,8 +197,7 @@ public class Gradebook {
                 }
                 total += categories.get(c).weight * (earned / possible);
             }
-            total = total * 100;
-            students.get(s).total = total;
+            students.get(s).total = total * 100;
             total = 0;
         }
 
@@ -268,24 +256,30 @@ public class Gradebook {
             case 2:
                 System.err.println("N must be at least 1, not " + output);
                 System.exit(1);
+            case 3:
+                System.err.println("No student with ID " + output);
+                System.exit(1);
         }
 
     }
 
     private String letterGrade(double grade) {
-        String letter;
         if (grade >= 90) {
-            letter = "A";
+            counts[0]++;
+            return letters[0];
         } else if (grade >= 80) {
-            letter = "B";
+            counts[1]++;
+            return letters[1];
         } else if (grade >= 70) {
-            letter = "C";
+            counts[2]++;
+            return letters[2];
         } else if (grade >= 60) {
-            letter = "D";
+            counts[3]++;
+            return letters[3];
         } else {
-            letter = "F";
+            counts[4]++;
+            return letters[4];
         }
-        return letter;
     }
 
     private static ArrayList<student> buildStudents(String[] names, int[] ids, double[][] scores) {

@@ -61,48 +61,56 @@ public class Gradebook {
             double min = getMin(a);
             double max = getMax(a);
             double mean = getMean(a, students.size());
-            System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", getAssignmentName(a), getCatName(a), getPoints(a),
+            System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", getAssignmentName(a), getCatAss(a), getPoints(a),
                     mean, min, max);
         }
+    }
+
+    private int findDrop(int c, int s) {
+        int dropped = 0;
+        if (getDrop(c)) {
+            double lowest = Double.MAX_VALUE;
+            for (int a = 0; a < assignments.size(); a++) {
+                if (getCat(a) == c && getScore(s, a) / getPoints(a) < lowest) {
+                    lowest = getScore(s, a) / getPoints(a);
+                    dropped = a;
+                }
+            }
+        }
+        return dropped;
+    }
+
+    private double total(int s, int c, int dropped) {
+        double earned = 0;
+        double possible = 0;
+        for (int a = 0; a < assignments.size(); a++) {
+            if (getCat(a) == c) {
+                if (a == dropped) {
+                    System.out.printf("  %-8s %4.0f / %3.0f  (dropped)%n", getAssignmentName(a),
+                            getScore(s, a),
+                            getPoints(a));
+                } else {
+                    System.out.printf("  %-8s %4.0f / %3.0f%n", getAssignmentName(a), getScore(s, a),
+                            getPoints(a));
+                    earned += getScore(s, a);
+                    possible += getPoints(a);
+                }
+            }
+        }
+        return earned / possible;
     }
 
     private void student(String args) {
         int s = checkId(args);
         System.out.println(getName(s) + " (" + getId(s) + ")");
         for (int c = 0; c < categories.size(); c++) {
-            int dropped = -1;
-            if (categories.get(c).drop) {
-                double lowest = Double.MAX_VALUE;
-                for (int a = 0; a < assignments.size(); a++) {
-                    if (assignments.get(a).cat == c && students.get(s).scores[a] / assignments.get(a).points < lowest) {
-                        lowest = students.get(s).scores[a] / assignments.get(a).points;
-                        dropped = a;
-                    }
-                }
-            }
-            if (categories.get(c).drop) {
-                System.out.printf("\n%s (%.0f%%, lowest score dropped)%n", categories.get(c).name,
-                        categories.get(c).weight * 100);
+            int dropped = findDrop(c, s);
+            if (getDrop(c)) {
+                System.out.printf("\n%s (%.0f%%, lowest score dropped)%n", getCatName(c), getWeight(c) * 100);
             } else {
-                System.out.printf("\n%s (%.0f%%)%n", categories.get(c).name, categories.get(c).weight * 100);
+                System.out.printf("\n%s (%.0f%%)%n", getCatName(c), getWeight(c) * 100);
             }
-            double earned = 0;
-            double possible = 0;
-            for (int a = 0; a < assignments.size(); a++) {
-                if (assignments.get(a).cat == c) {
-                    if (a == dropped) {
-                        System.out.printf("  %-8s %4.0f / %3.0f  (dropped)%n", assignments.get(a).name,
-                                students.get(s).scores[a],
-                                assignments.get(a).points);
-                    } else {
-                        System.out.printf("  %-8s %4.0f / %3.0f%n", assignments.get(a).name, students.get(s).scores[a],
-                                assignments.get(a).points);
-                        earned += students.get(s).scores[a];
-                        possible += assignments.get(a).points;
-                    }
-                }
-            }
-            System.out.printf("  %-8s %10.2f%%%n", "Total", earned / possible * 100);
+            System.out.printf("  %-8s %10.2f%%%n", "Total", total(s, c, dropped) * 100);
         }
         double grade = weighting(s) * 100;
         System.out.printf("\nFinal grade: %.2f (%s)%n", grade, Grade(grade));
@@ -265,12 +273,16 @@ public class Gradebook {
         return assignments.get(a).name;
     }
 
-    private String getCatName(int a) {
-        return categories.get(assignments.get(a).cat).name;
+    private String getCatName(int c) {
+        return categories.get(c).name;
     }
 
     private int getCat(int a) {
         return assignments.get(a).cat;
+    }
+
+    private String getCatAss(int a) {
+        return categories.get(assignments.get(a).cat).name;
     }
 
     private double getPoints(int a) {

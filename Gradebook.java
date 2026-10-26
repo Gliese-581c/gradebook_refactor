@@ -66,6 +66,82 @@ public class Gradebook {
         }
     }
 
+    private void student(String args) {
+        int s = checkId(args);
+        System.out.println(getName(s) + " (" + getId(s) + ")");
+        for (int c = 0; c < categories.size(); c++) {
+            int dropped = findDrop(c, s);
+            if (getDrop(c)) {
+                System.out.printf("\n%s (%.0f%%, lowest score dropped)%n", getCatName(c), getWeight(c) * 100);
+            } else {
+                System.out.printf("\n%s (%.0f%%)%n", getCatName(c), getWeight(c) * 100);
+            }
+            System.out.printf("  %-8s %10.2f%%%n", "Total", total(s, c, dropped) * 100);
+        }
+        double grade = weighting(s) * 100;
+        System.out.printf("\nFinal grade: %.2f (%s)%n", grade, Grade(grade));
+    }
+
+    private void top(String args) {
+
+        int n = parse(args);
+        if (n < 1) {
+            error(args, 2);
+        }
+
+        for (int s = 0; s < students.size(); s++) {
+            students.get(s).total = calculateTotal(s) * 100;
+        }
+
+        Collections.sort(students, (a, b) -> Double.compare(a.total, b.total));
+        Collections.reverse(students);
+
+        System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
+        for (int i = 0; i < n && i < students.size(); i++) {
+            System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, getName(i), getId(i),
+                    getTotal(i), Grade(getTotal(i)));
+        }
+    }
+
+    private double calculateTotal(int s) {
+        double total = 0;
+        for (int c = 0; c < categories.size(); c++) {
+
+            double earned = 0;
+            double possible = 0;
+            double lowestPct = Double.MAX_VALUE;
+            double lowestEarned = 0;
+            double lowestPossible = 0;
+            for (int a = 0; a < assignments.size(); a++) {
+                if (assignments.get(a).cat == c) {
+                    earned += getScore(s, a);
+                    possible += assignments.get(a).points;
+                    if (getScore(s, a) / getPoints(a) < lowestPct) {
+                        lowestPct = getScore(s, a) / getPoints(a);
+                        lowestEarned = getScore(s, a);
+                        lowestPossible = getPoints(a);
+                    }
+                }
+            }
+            if (getDrop(c)) {
+                earned -= lowestEarned;
+                possible -= lowestPossible;
+            }
+            total += getWeight(c) * (earned / possible);
+        }
+        return total;
+    }
+
+    private void grades() {
+        System.out.printf("%-14s %5s %7s  %s%n", "Name", "ID", "Grade", "Letter");
+
+        for (int s = 0; s < students.size(); s++) {
+            double grade = weighting(s) * 100;
+            System.out.printf("%-14s %5d %7.2f  %s%n", getName(s), getId(s), grade,
+                    Grade(grade));
+        }
+    }
+
     private int findDrop(int c, int s) {
         int dropped = 0;
         if (getDrop(c)) {
@@ -100,95 +176,13 @@ public class Gradebook {
         return earned / possible;
     }
 
-    private void student(String args) {
-        int s = checkId(args);
-        System.out.println(getName(s) + " (" + getId(s) + ")");
-        for (int c = 0; c < categories.size(); c++) {
-            int dropped = findDrop(c, s);
-            if (getDrop(c)) {
-                System.out.printf("\n%s (%.0f%%, lowest score dropped)%n", getCatName(c), getWeight(c) * 100);
-            } else {
-                System.out.printf("\n%s (%.0f%%)%n", getCatName(c), getWeight(c) * 100);
-            }
-            System.out.printf("  %-8s %10.2f%%%n", "Total", total(s, c, dropped) * 100);
-        }
-        double grade = weighting(s) * 100;
-        System.out.printf("\nFinal grade: %.2f (%s)%n", grade, Grade(grade));
-    }
-
-    private void top(String args) {
-
-        int n = 0;
-        try {
-            n = Integer.parseInt(args);
-        } catch (NumberFormatException e) {
-            error(args, 1);
-        }
-        if (n < 1) {
-            error(args, 2);
-        }
-
-        double total = 0;
-        for (int s = 0; s < students.size(); s++) {
-            for (int c = 0; c < categories.size(); c++) {
-
-                double earned = 0;
-                double possible = 0;
-                double lowestPct = Double.MAX_VALUE;
-                double lowestEarned = 0;
-                double lowestPossible = 0;
-                for (int a = 0; a < assignments.size(); a++) {
-                    if (assignments.get(a).cat == c) {
-                        earned += students.get(s).scores[a];
-                        possible += assignments.get(a).points;
-                        if (students.get(s).scores[a] / assignments.get(a).points < lowestPct) {
-                            lowestPct = students.get(s).scores[a] / assignments.get(a).points;
-                            lowestEarned = students.get(s).scores[a];
-                            lowestPossible = assignments.get(a).points;
-                        }
-                    }
-                }
-                if (categories.get(c).drop) {
-                    earned -= lowestEarned;
-                    possible -= lowestPossible;
-                }
-                total += categories.get(c).weight * (earned / possible);
-            }
-            students.get(s).total = total * 100;
-            total = 0;
-        }
-
-        Collections.sort(students, (a, b) -> Double.compare(a.total, b.total));
-        Collections.reverse(students);
-
-        System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
-        for (int i = 0; i < n && i < students.size(); i++) {
-            System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, students.get(i).name, students.get(i).id,
-                    students.get(i).total, Grade(students.get(i).total));
-        }
-    }
-
-    private void grades() {
-        System.out.printf("%-14s %5s %7s  %s%n", "Name", "ID", "Grade", "Letter");
-
-        for (int s = 0; s < students.size(); s++) {
-            double grade = weighting(s) * 100;
-            System.out.printf("%-14s %5d %7.2f  %s%n", getName(s), getId(s), grade,
-                    Grade(grade));
-        }
-    }
-
     private int checkId(String args) {
-        int id = 0;
-        try {
-            id = Integer.parseInt(args);
-        } catch (NumberFormatException e) {
-            error(args, 1);
-        }
+        int id = parse(args);
         int s = -1;
         for (int i = 0; i < students.size(); i++) {
             if (students.get(i).id == id) {
                 s = i;
+                break;
             }
         }
         if (s == -1) {
@@ -240,6 +234,16 @@ public class Gradebook {
                 System.exit(1);
         }
 
+    }
+
+    private int parse(String args) {
+        int n = 0;
+        try {
+            n = Integer.parseInt(args);
+        } catch (NumberFormatException e) {
+            error(args, 1);
+        }
+        return n;
     }
 
     private String Grade(double grade) {
@@ -300,6 +304,10 @@ public class Gradebook {
 
     private double getScore(int s, int i) {
         return students.get(s).scores[i];
+    }
+
+    private double getTotal(int s) {
+        return students.get(s).total;
     }
 
     private double getMin(int a) {

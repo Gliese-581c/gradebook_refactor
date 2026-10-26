@@ -25,6 +25,7 @@ class category {
 
 class assignment {
     String name;
+    String catName;
     int cat;
     double points;
 }
@@ -34,72 +35,38 @@ class student {
     int id;
     double[] scores = new double[9];
     double total = 0;
-
 }
 
 public class Gradebook {
 
-    public static final String[] letters = { "A", "B", "C", "D", "F" };
-    public static int[] counts = new int[letters.length];
+    private final String[] letters = { "A", "B", "C", "D", "F" };
+    private int[] counts = new int[letters.length];
+    private static ArrayList<student> students;
+    private static ArrayList<assignment> assignments;
+    private static ArrayList<category> categories;
 
-    private void distribution(ArrayList<student> students, ArrayList<assignment> assignments,
-            ArrayList<category> categories) {
+    private void distribution() {
         for (int s = 0; s < students.size(); s++) {
-            double weighted = 0;
-            for (int c = 0; c < categories.size(); c++) {
-                int dropped = -1;
-                if (categories.get(c).drop) {
-                    double lowest = Double.MAX_VALUE;
-                    for (int a = 0; a < assignments.size(); a++) {
-                        if (assignments.get(a).cat == c
-                                && students.get(s).scores[a] / assignments.get(a).points < lowest) {
-                            lowest = students.get(s).scores[a] / assignments.get(a).points;
-                            dropped = a;
-                        }
-                    }
-                }
-                double earned = 0;
-                double possible = 0;
-                for (int a = 0; a < assignments.size(); a++) {
-                    if (assignments.get(a).cat == c && a != dropped) {
-                        earned += students.get(s).scores[a];
-                        possible += assignments.get(a).points;
-                    }
-                }
-                weighted += categories.get(c).weight * (earned / possible);
-            }
-            double grade = weighted * 100;
-            getGrade(grade);
+            double grade = weighting(s) * 100;
+            Grade(grade);
         }
         for (int i = 0; i < letters.length; i++) {
             System.out.printf("%s %2d  %s%n", letters[i], counts[i], "*".repeat(counts[i]));
         }
     }
 
-    private void assignments(ArrayList<student> students, ArrayList<assignment> assignments,
-            ArrayList<category> categories) {
+    private void assignments() {
         System.out.printf("%-8s %-9s %8s %7s %5s %5s%n", "Name", "Category", "Possible", "Mean", "Min", "Max");
         for (int a = 0; a < assignments.size(); a++) {
-            double total = 0;
-            double min = students.get(0).scores[a];
-            double max = students.get(0).scores[a];
-            for (int s = 0; s < students.size(); s++) {
-                total += students.get(s).scores[a];
-                if (students.get(s).scores[a] < min) {
-                    min = students.get(s).scores[a];
-                }
-                if (students.get(s).scores[a] > max) {
-                    max = students.get(s).scores[a];
-                }
-            }
-            System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", assignments.get(a).name,
-                    categories.get(assignments.get(a).cat).name,
-                    assignments.get(a).points, total / students.size(), min, max);
+            double min = getMin(a);
+            double max = getMax(a);
+            double mean = getMean(a, students.size());
+            System.out.printf("%-8s %-9s %8.0f %7.2f %5.0f %5.0f%n", getAssignmentName(a), getCatName(a), getPoints(a),
+                    mean, min, max);
         }
     }
 
-    private void student(String args, ArrayList<student> students, ArrayList<assignment> assignments,
-            ArrayList<category> categories) {
+    private void student(String args) {
         int id = 0;
         try {
             id = Integer.parseInt(args);
@@ -154,11 +121,10 @@ public class Gradebook {
             weighted += categories.get(c).weight * (earned / possible);
         }
         double grade = weighted * 100;
-        System.out.printf("\nFinal grade: %.2f (%s)%n", grade, getGrade(grade));
+        System.out.printf("\nFinal grade: %.2f (%s)%n", grade, Grade(grade));
     }
 
-    private void top(String args, ArrayList<student> students, ArrayList<assignment> assignments,
-            ArrayList<category> categories) {
+    private void top(String args) {
 
         int n = 0;
         try {
@@ -206,24 +172,21 @@ public class Gradebook {
         System.out.printf("%4s  %-14s %5s %7s  %s%n", "Rank", "Name", "ID", "Grade", "Letter");
         for (int i = 0; i < n && i < students.size(); i++) {
             System.out.printf("%4d  %-14s %5d %7.2f  %s%n", i + 1, students.get(i).name, students.get(i).id,
-                    students.get(i).total,
-                    getGrade(students.get(i).total));
+                    students.get(i).total, Grade(students.get(i).total));
         }
     }
 
-    private void grades(ArrayList<student> students, ArrayList<assignment> assignments,
-            ArrayList<category> categories) {
+    private void grades() {
         System.out.printf("%-14s %5s %7s  %s%n", "Name", "ID", "Grade", "Letter");
 
         for (int s = 0; s < students.size(); s++) {
-            double grade = weighting(s, students, assignments, categories) * 100;
-            System.out.printf("%-14s %5d %7.2f  %s%n", getName(students, s), getId(students, s), grade,
-                    getGrade(grade));
+            double grade = weighting(s) * 100;
+            System.out.printf("%-14s %5d %7.2f  %s%n", getName(s), getId(s), grade,
+                    Grade(grade));
         }
     }
 
-    private double weighting(int s, ArrayList<student> students, ArrayList<assignment> assignments,
-            ArrayList<category> categories) {
+    private double weighting(int s) {
         double weighted = 0;
         for (int c = 0; c < categories.size(); c++) {
             int dropped = -1;
@@ -268,7 +231,7 @@ public class Gradebook {
 
     }
 
-    private String getGrade(double grade) {
+    private String Grade(double grade) {
         if (grade >= 90) {
             counts[0]++;
             return letters[0];
@@ -287,20 +250,65 @@ public class Gradebook {
         }
     }
 
-    private double getScore(ArrayList<student> students, int student, int i) {
-        return students.get(student).scores[i];
+    private String getAssignmentName(int a) {
+        return assignments.get(a).name;
     }
 
-    private String getName(ArrayList<student> students, int student) {
-        return students.get(student).name;
+    private String getCatName(int a) {
+        return categories.get(assignments.get(a).cat).name;
     }
 
-    private int getId(ArrayList<student> students, int student) {
-        return students.get(student).id;
+    private double getPoints(int a) {
+        ArrayList<assignment> temp = new ArrayList<assignment>(assignments);
+        return temp.get(a).points;
     }
 
-    private static ArrayList<student> buildStudents(String[] names, int[] ids, double[][] scores) {
-        ArrayList<student> students = new ArrayList<student>();
+    private String getName(int student) {
+        ArrayList<student> temp = new ArrayList<student>(students);
+        return temp.get(student).name;
+    }
+
+    private int getId(int student) {
+        ArrayList<student> temp = new ArrayList<student>(students);
+        return temp.get(student).id;
+    }
+
+    private double getScore(int student, int i) {
+        ArrayList<student> temp = new ArrayList<student>(students);
+        return temp.get(student).scores[i];
+    }
+
+    private double getMin(int a) {
+        double min = Integer.MAX_VALUE;
+        for (int i = 0; i < students.size(); i++) {
+            if (getScore(i, a) < min) {
+                min = getScore(i, a);
+            }
+        }
+        return min;
+    }
+
+    private double getMax(int a) {
+        double max = Integer.MIN_VALUE;
+        for (int i = 0; i < students.size(); i++) {
+            if (getScore(i, a) > max) {
+                max = getScore(i, a);
+            }
+        }
+        return max;
+    }
+
+    private double getMean(int a, int div) {
+        double mean = 0;
+        for (int i = 0; i < students.size(); i++) {
+            mean += getScore(i, a);
+        }
+        mean = mean / div;
+        return mean;
+    }
+
+    private static void buildStudents(String[] names, int[] ids, double[][] scores) {
+        ArrayList<student> tempList = new ArrayList<student>();
         for (int i = 0; i < names.length; i++) {
             int tempScore = 0;
             student temp = new student();
@@ -311,34 +319,34 @@ public class Gradebook {
                 temp.scores[j] = scores[i][j];
             }
             temp.total = tempScore;
-            students.add(temp);
+            tempList.add(temp);
         }
-        return students;
+        students = tempList;
     }
 
-    private static ArrayList<assignment> buildAssignments(String[] assignNames, int[] assignCats,
+    private static void buildAssignments(String[] assignNames, int[] assignCats,
             double[] pointsPossible) {
-        ArrayList<assignment> assignments = new ArrayList<assignment>();
+        ArrayList<assignment> tempAss = new ArrayList<assignment>();
         for (int i = 0; i < assignNames.length; i++) {
             assignment temp = new assignment();
             temp.name = assignNames[i];
             temp.cat = assignCats[i];
             temp.points = pointsPossible[i];
-            assignments.add(temp);
+            tempAss.add(temp);
         }
-        return assignments;
+        assignments = tempAss;
     }
 
-    private static ArrayList<category> buildCats(String[] catNames, double[] catWeights, boolean[] catDropLowest) {
-        ArrayList<category> categories = new ArrayList<category>();
+    private static void buildCats(String[] catNames, double[] catWeights, boolean[] catDropLowest) {
+        ArrayList<category> tempCat = new ArrayList<category>();
         for (int i = 0; i < catNames.length; i++) {
             category temp = new category();
             temp.name = catNames[i];
             temp.weight = catWeights[i];
             temp.drop = catDropLowest[i];
-            categories.add(temp);
+            tempCat.add(temp);
         }
-        return categories;
+        categories = tempCat;
     }
 
     public static void main(String[] args) {
@@ -377,15 +385,14 @@ public class Gradebook {
                 { 9, 9, 16, 7, 17, 21, 24, 70, 110 },
         };
 
-        ArrayList<student> students = buildStudents(names, ids, scores);
-        ArrayList<assignment> assignments = buildAssignments(assignNames, assignCats, pointsPossible);
-        ArrayList<category> categories = buildCats(catNames, catWeights, catDropLowest);
+        buildStudents(names, ids, scores);
+        buildAssignments(assignNames, assignCats, pointsPossible);
+        buildCats(catNames, catWeights, catDropLowest);
 
-        new Gradebook().run(args, students, assignments, categories);
+        new Gradebook().run(args);
     }
 
-    private void run(String[] args, ArrayList<student> students, ArrayList<assignment> assignments,
-            ArrayList<category> categories) {
+    private void run(String[] args) {
 
         String usage = "Usage: java Gradebook COMMAND [ARG]\n"
                 + "Commands:\n"
@@ -403,35 +410,35 @@ public class Gradebook {
                 if (args.length > 1) {
                     error(usage, 0);
                 } else {
-                    grades(students, assignments, categories);
+                    grades();
                 }
                 break;
             case "top":
                 if (args.length != 2) {
                     error(usage, 0);
                 } else {
-                    top(args[1], students, assignments, categories);
+                    top(args[1]);
                 }
                 break;
             case "student":
                 if (args.length != 2) {
                     error(usage, 0);
                 } else {
-                    student(args[1], students, assignments, categories);
+                    student(args[1]);
                 }
                 break;
             case "assignments":
                 if (args.length != 1) {
                     error(usage, 0);
                 } else {
-                    assignments(students, assignments, categories);
+                    assignments();
                 }
                 break;
             case "distribution":
                 if (args.length != 1) {
                     error(usage, 0);
                 } else {
-                    distribution(students, assignments, categories);
+                    distribution();
                 }
                 break;
             default:

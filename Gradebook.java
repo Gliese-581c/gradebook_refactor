@@ -67,23 +67,8 @@ public class Gradebook {
     }
 
     private void student(String args) {
-        int id = 0;
-        try {
-            id = Integer.parseInt(args);
-        } catch (NumberFormatException e) {
-            error(args, 1);
-        }
-        int s = -1;
-        for (int i = 0; i < students.size(); i++) {
-            if (students.get(i).id == id) {
-                s = i;
-            }
-        }
-        if (s == -1) {
-            error(Integer.toString(id), 3);
-        }
-        System.out.println(students.get(s).name + " (" + students.get(s).id + ")");
-        double weighted = 0;
+        int s = checkId(args);
+        System.out.println(getName(s) + " (" + getId(s) + ")");
         for (int c = 0; c < categories.size(); c++) {
             int dropped = -1;
             if (categories.get(c).drop) {
@@ -118,9 +103,8 @@ public class Gradebook {
                 }
             }
             System.out.printf("  %-8s %10.2f%%%n", "Total", earned / possible * 100);
-            weighted += categories.get(c).weight * (earned / possible);
         }
-        double grade = weighted * 100;
+        double grade = weighting(s) * 100;
         System.out.printf("\nFinal grade: %.2f (%s)%n", grade, Grade(grade));
     }
 
@@ -186,16 +170,35 @@ public class Gradebook {
         }
     }
 
+    private int checkId(String args) {
+        int id = 0;
+        try {
+            id = Integer.parseInt(args);
+        } catch (NumberFormatException e) {
+            error(args, 1);
+        }
+        int s = -1;
+        for (int i = 0; i < students.size(); i++) {
+            if (students.get(i).id == id) {
+                s = i;
+            }
+        }
+        if (s == -1) {
+            error(Integer.toString(id), 3);
+        }
+        return s;
+    }
+
     private double weighting(int s) {
         double weighted = 0;
         for (int c = 0; c < categories.size(); c++) {
             int dropped = -1;
-            if (categories.get(c).drop) {
+            if (getDrop(c)) {
                 double lowest = Double.MAX_VALUE;
                 for (int a = 0; a < assignments.size(); a++) {
-                    if (assignments.get(a).cat == c
-                            && students.get(s).scores[a] / assignments.get(a).points < lowest) {
-                        lowest = students.get(s).scores[a] / assignments.get(a).points;
+                    if (getCat(a) == c
+                            && getScore(s, a) / getPoints(a) < lowest) {
+                        lowest = getScore(s, a) / getPoints(a);
                         dropped = a;
                     }
                 }
@@ -203,12 +206,12 @@ public class Gradebook {
             double earned = 0;
             double possible = 0;
             for (int a = 0; a < assignments.size(); a++) {
-                if (assignments.get(a).cat == c && a != dropped) {
-                    earned += students.get(s).scores[a];
-                    possible += assignments.get(a).points;
+                if (getCat(a) == c && a != dropped) {
+                    earned += getScore(s, a);
+                    possible += getPoints(a);
                 }
             }
-            weighted += categories.get(c).weight * (earned / possible);
+            weighted += getWeight(c) * (earned / possible);
         }
         return weighted;
     }
@@ -250,6 +253,14 @@ public class Gradebook {
         }
     }
 
+    private double getWeight(int c) {
+        return categories.get(c).weight;
+    }
+
+    private boolean getDrop(int c) {
+        return categories.get(c).drop;
+    }
+
     private String getAssignmentName(int a) {
         return assignments.get(a).name;
     }
@@ -258,24 +269,25 @@ public class Gradebook {
         return categories.get(assignments.get(a).cat).name;
     }
 
+    private int getCat(int a) {
+        return assignments.get(a).cat;
+    }
+
     private double getPoints(int a) {
         ArrayList<assignment> temp = new ArrayList<assignment>(assignments);
         return temp.get(a).points;
     }
 
-    private String getName(int student) {
-        ArrayList<student> temp = new ArrayList<student>(students);
-        return temp.get(student).name;
+    private String getName(int s) {
+        return students.get(s).name;
     }
 
-    private int getId(int student) {
-        ArrayList<student> temp = new ArrayList<student>(students);
-        return temp.get(student).id;
+    private int getId(int s) {
+        return students.get(s).id;
     }
 
-    private double getScore(int student, int i) {
-        ArrayList<student> temp = new ArrayList<student>(students);
-        return temp.get(student).scores[i];
+    private double getScore(int s, int i) {
+        return students.get(s).scores[i];
     }
 
     private double getMin(int a) {
